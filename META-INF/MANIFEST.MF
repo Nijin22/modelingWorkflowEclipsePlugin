@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: ModelingWorkflowEclipsePlugin
+Bundle-SymbolicName: info.dennis-weber.modelingWorkflowEclipsePlugin
+Bundle-Version: 1.0.0.SNAPSHOT
+Automatic-Module-Name: info.dennis-weber.modelingWorkflowEclipsePlugin
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8

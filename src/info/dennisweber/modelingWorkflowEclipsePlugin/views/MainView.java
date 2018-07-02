@@ -91,7 +91,7 @@ public class MainView extends ViewPart {
 
 	private Link initViewAllIssuesLink(Group issueGroup) {
 		Link viewAllIssuesLink = new Link(issueGroup, SWT.NONE);
-		viewAllIssuesLink.setText("<a>View all Issues on Bitbucket</a>");
+		viewAllIssuesLink.setText("<a>View all issues on Bitbucket</a>");
 		viewAllIssuesLink.addListener(SWT.Selection, event -> {
 			Program.launch("https://example.org"); // Launch the default browser
 			// TODO: This should link somewhere more useful.
@@ -102,7 +102,7 @@ public class MainView extends ViewPart {
 
 	private Link initCreateIssueLink(Group issueGroup) {
 		Link createIssueLink = new Link(issueGroup, SWT.NONE);
-		createIssueLink.setText("<a>Create new Issue</a>");
+		createIssueLink.setText("<a>Create new issue</a>");
 		createIssueLink.addListener(SWT.Selection, event -> {
 			Program.launch("https://example.org"); // Launch the default browser
 			// TODO: This should link somewhere more useful.
@@ -155,7 +155,7 @@ public class MainView extends ViewPart {
 
 	private Button initCreateNewReleaseBranchButton(Composite parent) {
 		Button button = new Button(parent, SWT.PUSH);
-		button.setText("Create new active release Branch");
+		button.setText("Create new active release branch");
 		button.addListener(SWT.Selection, event -> {
 			Shell shell = this.getSite().getWorkbenchWindow().getShell();
 			MessageDialog.openError(shell, "Not implemented", "This feature is not implemented yet.");

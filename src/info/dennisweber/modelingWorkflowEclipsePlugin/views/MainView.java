@@ -3,6 +3,7 @@ package info.dennisweber.modelingworkfloweclipseplugin.views;
 import java.time.Instant;
 
 import org.eclipse.jface.dialogs.MessageDialog;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -18,6 +19,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.part.ViewPart;
 
 import info.dennisweber.modelingworkfloweclipseplugin.dialogs.ConfigurationDialog;
+import info.dennisweber.modelingworkfloweclipseplugin.model.IssueManager;
 
 public class MainView extends ViewPart {
 
@@ -78,18 +80,11 @@ public class MainView extends ViewPart {
 			TableColumn column = new TableColumn(issueTable, SWT.NONE);
 			column.setText(titles[i]);
 		}
-		int count = 12;
-		for (int i = 0; i < count; i++) {
-			TableItem item = new TableItem(issueTable, SWT.NONE);
-			item.setText(0, Integer.toString(i));
-			item.setText(1, "Foo the bar");
-			item.setText(2, "ToDo");
-			item.setText(3, "John Doe");
-			item.setText(4, "This should be clickable");
-		}
-		for (int i = 0; i < titles.length; i++) {
-			issueTable.getColumn(i).pack();
-		}
+
+		// Fill table in new thread
+		new Thread(() -> {
+			IssueManager.fillSwtTable(issueTable);
+		}).start();;
 
 		return issueTable;
 	}

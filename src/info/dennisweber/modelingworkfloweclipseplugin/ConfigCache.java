@@ -20,7 +20,7 @@ public class ConfigCache {
 	public static String getJiraApiUrl() {
 		// Set defaults for prototype
 		if (jiraApiUrl == null) {
-			jiraApiUrl = "https://jira.bfs-intra.net/rest/agile/latest/board/137/";
+			jiraApiUrl = "https://jira.bfs-intra.net/rest/agile/1.0/board/137/";
 		}
 
 		return jiraApiUrl;

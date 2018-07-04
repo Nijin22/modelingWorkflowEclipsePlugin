@@ -17,6 +17,8 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.part.ViewPart;
 
+import info.dennisweber.modelingworkfloweclipseplugin.dialogs.ConfigurationDialog;
+
 public class MainView extends ViewPart {
 
 	public MainView() {
@@ -43,6 +45,9 @@ public class MainView extends ViewPart {
 		Button createNewReleaseBranchButton = initCreateNewReleaseBranchButton(releaseBranchesGroup);
 		Button buildReleaseFromMasterButton = initBuildReleaseFromMasterButton(releaseBranchesGroup);
 
+		// Config Button:
+		initConfigButton(parent);
+		
 		System.out.println(Instant.now().toString() + " Loaded.");
 	}
 
@@ -172,6 +177,19 @@ public class MainView extends ViewPart {
 			Shell shell = this.getSite().getWorkbenchWindow().getShell();
 			MessageDialog.openError(shell, "Not implemented", "This feature is not implemented yet.");
 			// TODO: Make the button do something useful
+		});
+
+		return button;
+	}
+
+	private Button initConfigButton(Composite parent) {
+		Button button = new Button(parent, SWT.PUSH);
+		button.setText("Configuration");
+		button.addListener(SWT.Selection, event -> {
+			Shell shell = this.getSite().getWorkbenchWindow().getShell();
+			ConfigurationDialog configDialog = new ConfigurationDialog(shell);
+			configDialog.create();
+			configDialog.open(); // Open dialog and block until it is closed again
 		});
 
 		return button;

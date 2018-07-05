@@ -49,7 +49,7 @@ public class MainView extends ViewPart {
 
 		// Config Button:
 		initConfigButton(parent);
-		
+
 		System.out.println(Instant.now().toString() + " Loaded.");
 	}
 
@@ -84,7 +84,8 @@ public class MainView extends ViewPart {
 		// Fill table in new thread
 		new Thread(() -> {
 			IssueManager.fillSwtTable(issueTable);
-		}).start();;
+		}).start();
+		;
 
 		return issueTable;
 	}

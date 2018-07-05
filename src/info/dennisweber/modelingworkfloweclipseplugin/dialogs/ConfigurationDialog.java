@@ -17,11 +17,15 @@ import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 public class ConfigurationDialog extends TitleAreaDialog {
 	private Text repoApiTextfield;
 	private Text jiraApiTextfield;
+	private Text usernameTextfield;
+	private Text passwordTextfield;
 	private Shell parentShell;
+	private ConfigCache configCache;
 
-	public ConfigurationDialog(Shell parentShell) {
+	public ConfigurationDialog(Shell parentShell, ConfigCache configCache) {
 		super(parentShell);
 		this.parentShell = parentShell;
+		this.configCache = configCache;
 	}
 
 	@Override
@@ -39,18 +43,23 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 
+		// Init all fields
 		initRepoApiInput(container);
 		initJiraApiInput(container);
+		initUsernameInput(container);
+		initPasswordInput(container);
 
+		passwordTextfield.setFocus();
+		
 		return area;
 	}
 
 	@Override
 	protected void okPressed() {
-		ConfigCache.setJiraApiUrl(jiraApiTextfield.getText());
-		ConfigCache.setRepoApiUrl(repoApiTextfield.getText());
+		configCache.update(repoApiTextfield.getText(), jiraApiTextfield.getText(), usernameTextfield.getText(),
+				passwordTextfield.getText());
 		MessageDialog.openInformation(parentShell, "Information",
-				"In the prototype, changes are only stored in cache.");
+				"In the prototype, changes are only stored in cache and might be lost on reboot of the ACTICO Modeler.");
 		super.okPressed();
 	}
 
@@ -74,7 +83,7 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		gd.horizontalAlignment = GridData.FILL;
 		repoApiTextfield = new Text(container, SWT.BORDER);
 		repoApiTextfield.setLayoutData(gd);
-		repoApiTextfield.setText(ConfigCache.getRepoApiUrl());
+		repoApiTextfield.setText(configCache.getRepoApiUrl());
 
 	}
 
@@ -88,6 +97,32 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		gd.horizontalAlignment = GridData.FILL;
 		jiraApiTextfield = new Text(container, SWT.BORDER);
 		jiraApiTextfield.setLayoutData(gd);
-		jiraApiTextfield.setText(ConfigCache.getJiraApiUrl());
+		jiraApiTextfield.setText(configCache.getJiraApiUrl());
+	}
+
+	private void initUsernameInput(Composite container) {
+		Label label = new Label(container, SWT.NONE);
+		label.setText("Username");
+
+		// Layout:
+		GridData gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = GridData.FILL;
+		usernameTextfield = new Text(container, SWT.BORDER);
+		usernameTextfield.setLayoutData(gd);
+		usernameTextfield.setText(configCache.getUsername());
+	}
+
+	private void initPasswordInput(Composite container) {
+		Label label = new Label(container, SWT.NONE);
+		label.setText("Password");
+
+		// Layout:
+		GridData gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = GridData.FILL;
+		passwordTextfield = new Text(container, SWT.BORDER | SWT.PASSWORD);
+		passwordTextfield.setLayoutData(gd);
+		passwordTextfield.setText(configCache.getPassword());
 	}
 }

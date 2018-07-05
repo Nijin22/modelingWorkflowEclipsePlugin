@@ -1,6 +1,7 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
 import java.time.Instant;
+import java.util.Set;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 
@@ -10,6 +11,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
@@ -18,11 +20,15 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.part.ViewPart;
 
+import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.dialogs.ConfigurationDialog;
-import info.dennisweber.modelingworkfloweclipseplugin.model.IssueManager;
+import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
+import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
 
 public class MainView extends ViewPart {
-
+	ConfigCache configCache;
+	JiraRestApi jiraApi;
+	
 	public MainView() {
 		super();
 	}
@@ -31,6 +37,18 @@ public class MainView extends ViewPart {
 	}
 
 	public void createPartControl(Composite parent) {
+		configCache = new ConfigCache();
+		if (configCache.isConfigured() == false) {
+			// Ensure the workflow tool is configured first
+			Shell shell = this.getSite().getWorkbenchWindow().getShell();
+			ConfigurationDialog configDialog = new ConfigurationDialog(shell, configCache);
+			configDialog.create();
+			configDialog.open(); // Open dialog and block until it is closed again
+		}
+		
+		jiraApi = new JiraRestApi(configCache);
+		
+		
 		GridLayout mainLayout = new GridLayout();
 		mainLayout.numColumns = 1;
 		parent.setLayout(mainLayout);
@@ -50,7 +68,7 @@ public class MainView extends ViewPart {
 		// Config Button:
 		initConfigButton(parent);
 
-		System.out.println(Instant.now().toString() + " Loaded.");
+		System.out.println(Instant.now().toString() + " Main View loaded.");
 	}
 
 	private Group initIssueGroup(Composite parent) {
@@ -83,7 +101,25 @@ public class MainView extends ViewPart {
 
 		// Fill table in new thread
 		new Thread(() -> {
-			IssueManager.fillSwtTable(issueTable);
+			Set<Issue> issues = jiraApi.getIssues();
+			
+			// Draw the update
+			Display.getDefault().syncExec(() -> {
+				int count = 12;
+				for (int i = 0; i < count; i++) {
+					TableItem item = new TableItem(issueTable, SWT.NONE);
+					item.setText(0, Integer.toString(i));
+					item.setText(1, "Foo the bar");
+					item.setText(2, "ToDo");
+					item.setText(3, "John Doe");
+					item.setText(4, "This should be clickable");
+				}
+
+				// Adjust the width of columns
+				for (int i = 0; i < issueTable.getColumnCount(); i++) {
+					issueTable.getColumn(i).pack();
+				}
+			});
 		}).start();
 		;
 
@@ -183,7 +219,7 @@ public class MainView extends ViewPart {
 		button.setText("Configuration");
 		button.addListener(SWT.Selection, event -> {
 			Shell shell = this.getSite().getWorkbenchWindow().getShell();
-			ConfigurationDialog configDialog = new ConfigurationDialog(shell);
+			ConfigurationDialog configDialog = new ConfigurationDialog(shell, configCache);
 			configDialog.create();
 			configDialog.open(); // Open dialog and block until it is closed again
 		});

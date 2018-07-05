@@ -1,20 +1,11 @@
 package info.dennisweber.modelingworkfloweclipseplugin.model;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
-import javax.net.ssl.SSLHandshakeException;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 
 import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 import okhttp3.Authenticator;
@@ -27,7 +18,6 @@ import okhttp3.Route;
 public class JiraRestApi {
 	private OkHttpClient client;
 	private ConfigCache configCache;
-	private Gson gson = new Gson();
 
 	private int activeSprintCached = -1;
 
@@ -76,24 +66,47 @@ public class JiraRestApi {
 
 	}
 
-	public Set<Issue> getIssues() {
-		try {
-			String url = configCache.getJiraApiUrl() + "sprint" + "/" + getActiveSprint() + "/" + "issue";
-			Request request = new Request.Builder().url(url).build();
-			Response response = client.newCall(request).execute();
-			String json = response.body().string();
+	public List<Issue> getIssues() throws IOException {
+		LinkedList<Issue> issues = new LinkedList<Issue>();
 
-			// System.out.println(response.body().string());
-			// TODO: Request ONLY THE ACTIVE Issues and return them
-		} catch (SSLHandshakeException e) {
-			System.out.println("SSL ERROR!");
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		String url = configCache.getJiraApiUrl() + "sprint" + "/" + getActiveSprint() + "/" + "issue?maxResults=999999";
+		// Current limit for ira.search.views.default.max at ACTICO is 1000, but if you
+		// have more than 1000 issues in your
+		// sprint, you probably have other problems than a half-working-prototype.
+		Request request = new Request.Builder().url(url).build();
+		Response response = client.newCall(request).execute();
+		String json = response.body().string();
 
-		return null;
+		JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
+		jsonObj.get("issues").getAsJsonArray().forEach(issueJsonElement -> {
+			JsonObject issueJsonObject = issueJsonElement.getAsJsonObject();
+
+			String id = issueJsonObject.get("key").getAsString();
+			String title = issueJsonObject.get("fields").getAsJsonObject().get("summary").getAsString();
+			String assignee = issueJsonObject.get("fields").getAsJsonObject().get("assignee").getAsJsonObject()
+					.get("displayName").getAsString();
+			IssueStatus status;
+			String statusText = issueJsonObject.get("fields").getAsJsonObject().get("status").getAsJsonObject()
+					.get("statusCategory").getAsJsonObject().get("key").getAsString();
+			switch (statusText) {
+			case "new":
+				status = IssueStatus.ToDo;
+				break;
+			case "indeterminate":
+				status = IssueStatus.InProgress;
+				break;
+			case "done":
+				status = IssueStatus.Done;
+				break;
+			default:
+				throw new RuntimeException("Unexpected status >" + statusText + "< for issue >" + id + "<.");
+			}
+
+			Issue issue = new Issue(id, title, status, assignee);
+			issues.add(issue);
+
+		});
+		return issues;
 	}
 
 	private int responseCount(Response response) {

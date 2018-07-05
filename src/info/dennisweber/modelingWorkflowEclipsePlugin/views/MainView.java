@@ -1,10 +1,10 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
+import java.io.IOException;
 import java.time.Instant;
-import java.util.Set;
+import java.util.List;
 
 import org.eclipse.jface.dialogs.MessageDialog;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -23,12 +23,13 @@ import org.eclipse.ui.part.ViewPart;
 import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.dialogs.ConfigurationDialog;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
+import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;
 import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
 
 public class MainView extends ViewPart {
 	ConfigCache configCache;
 	JiraRestApi jiraApi;
-	
+
 	public MainView() {
 		super();
 	}
@@ -45,10 +46,9 @@ public class MainView extends ViewPart {
 			configDialog.create();
 			configDialog.open(); // Open dialog and block until it is closed again
 		}
-		
+
 		jiraApi = new JiraRestApi(configCache);
-		
-		
+
 		GridLayout mainLayout = new GridLayout();
 		mainLayout.numColumns = 1;
 		parent.setLayout(mainLayout);
@@ -101,25 +101,34 @@ public class MainView extends ViewPart {
 
 		// Fill table in new thread
 		new Thread(() -> {
-			Set<Issue> issues = jiraApi.getIssues();
-			
-			// Draw the update
-			Display.getDefault().syncExec(() -> {
-				int count = 12;
-				for (int i = 0; i < count; i++) {
-					TableItem item = new TableItem(issueTable, SWT.NONE);
-					item.setText(0, Integer.toString(i));
-					item.setText(1, "Foo the bar");
-					item.setText(2, "ToDo");
-					item.setText(3, "John Doe");
-					item.setText(4, "This should be clickable");
-				}
+			try {
+				List<Issue> issues = jiraApi.getIssues();
 
-				// Adjust the width of columns
-				for (int i = 0; i < issueTable.getColumnCount(); i++) {
-					issueTable.getColumn(i).pack();
-				}
-			});
+				// Draw the update
+				Display.getDefault().syncExec(() -> {
+					for (Issue issue : issues) {
+						if (issue.getStatus() == IssueStatus.Done) {
+							continue; // Skip the issues which are already done.
+						}
+						
+						TableItem item = new TableItem(issueTable, SWT.NONE);
+						item.setText(0, issue.getId());
+						item.setText(1, issue.getTitle());
+						item.setText(2, issue.getStatus().toString());
+						item.setText(3, issue.getAssignee());
+						item.setText(4, "This should be clickable");
+					}
+
+					// Adjust the width of columns
+					for (int i = 0; i < issueTable.getColumnCount(); i++) {
+						issueTable.getColumn(i).pack();
+					}
+				});
+			} catch (IOException e) {
+				System.out.println("Failed to update Issues.");
+				e.printStackTrace();
+			}
+
 		}).start();
 		;
 

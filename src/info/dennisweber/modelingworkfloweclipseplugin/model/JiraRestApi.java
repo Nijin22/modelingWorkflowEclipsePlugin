@@ -1,8 +1,21 @@
 package info.dennisweber.modelingworkfloweclipseplugin.model;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import javax.net.ssl.SSLHandshakeException;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+
 import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
@@ -14,6 +27,7 @@ import okhttp3.Route;
 public class JiraRestApi {
 	private OkHttpClient client;
 	private ConfigCache configCache;
+	private Gson gson = new Gson();
 
 	private int activeSprintCached = -1;
 
@@ -45,12 +59,19 @@ public class JiraRestApi {
 			String url = configCache.getJiraApiUrl() + "sprint";
 			Request request = new Request.Builder().url(url).build();
 			Response response = client.newCall(request).execute();
+			String json = response.body().string();
 
-			System.out.println(response.body().string());
-
-			// TODO Find active sprint and CACHE!
+			// Find active sprint and CACHE!
+			JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
+			jsonObj.get("values").getAsJsonArray().forEach(sprint -> {
+				if (sprint.getAsJsonObject().get("state").getAsString().equals("active")) {
+					// this is the active string
+					activeSprintCached = sprint.getAsJsonObject().get("id").getAsInt();
+				}
+			});
 		}
 
+		System.out.println("Debug: Active Sprint is " + activeSprintCached);
 		return activeSprintCached;
 
 	}
@@ -60,6 +81,7 @@ public class JiraRestApi {
 			String url = configCache.getJiraApiUrl() + "sprint" + "/" + getActiveSprint() + "/" + "issue";
 			Request request = new Request.Builder().url(url).build();
 			Response response = client.newCall(request).execute();
+			String json = response.body().string();
 
 			// System.out.println(response.body().string());
 			// TODO: Request ONLY THE ACTIVE Issues and return them

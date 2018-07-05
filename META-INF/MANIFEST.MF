@@ -9,4 +9,5 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.109.0",
  org.eclipse.core.runtime
 Bundle-ClassPath: lib/okhttp-3.10.0.jar,
  .,
- lib/okio-1.14.1.jar
+ lib/okio-1.14.1.jar,
+ lib/gson-2.8.5.jar

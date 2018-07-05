@@ -2,9 +2,7 @@ package info.dennisweber.modelingworkfloweclipseplugin.model;
 
 import java.io.IOException;
 import java.util.Set;
-
 import javax.net.ssl.SSLHandshakeException;
-
 import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
@@ -17,9 +15,11 @@ public class JiraRestApi {
 	private OkHttpClient client;
 	private ConfigCache configCache;
 
+	private int activeSprintCached = -1;
+
 	public JiraRestApi(ConfigCache configCache) {
 		this.configCache = configCache;
-		
+
 		// Use authentication
 		// See: https://stackoverflow.com/a/34819354/3298787
 		OkHttpClient.Builder builder = new OkHttpClient.Builder();
@@ -35,17 +35,34 @@ public class JiraRestApi {
 				return response.request().newBuilder().header("Authorization", credential).build();
 			}
 		});
-		
+
 		client = builder.build();
 	}
 
-	public Set<Issue> getIssues() {
-		try {
-			String url = configCache.getJiraApiUrl() + "issue";
+	public int getActiveSprint() throws IOException {
+		if (activeSprintCached == -1) {
+			// Not cached yet.
+			String url = configCache.getJiraApiUrl() + "sprint";
 			Request request = new Request.Builder().url(url).build();
 			Response response = client.newCall(request).execute();
 
 			System.out.println(response.body().string());
+
+			// TODO Find active sprint and CACHE!
+		}
+
+		return activeSprintCached;
+
+	}
+
+	public Set<Issue> getIssues() {
+		try {
+			String url = configCache.getJiraApiUrl() + "sprint" + "/" + getActiveSprint() + "/" + "issue";
+			Request request = new Request.Builder().url(url).build();
+			Response response = client.newCall(request).execute();
+
+			// System.out.println(response.body().string());
+			// TODO: Request ONLY THE ACTIVE Issues and return them
 		} catch (SSLHandshakeException e) {
 			System.out.println("SSL ERROR!");
 			e.printStackTrace();

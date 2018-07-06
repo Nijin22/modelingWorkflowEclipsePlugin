@@ -1,7 +1,9 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -33,6 +35,8 @@ public class MasterPage {
 
 	private Group releaseBranchesGroup;
 	private Table issueTable;
+	private Set<Button> issueTableButtons = new HashSet<Button>();
+	private Button issueRefreshButton;
 	private Link issueLink;
 	private Link viewAllIssuesLink;
 
@@ -54,6 +58,7 @@ public class MasterPage {
 		// Issues:
 		issueGroup = initIssueGroup(parent);
 		issueTable = initIssueTable(issueGroup);
+		issueRefreshButton = initIssueRefreshButton(issueGroup);
 		issueLink = initCreateIssueLink(issueGroup);
 		viewAllIssuesLink = initViewAllIssuesLink(issueGroup);
 
@@ -78,6 +83,10 @@ public class MasterPage {
 
 		viewAllIssuesLink.dispose();
 		issueLink.dispose();
+		issueRefreshButton.dispose();
+		for (Button button : issueTableButtons) {
+			button.dispose();
+		}
 		issueTable.dispose();
 		issueGroup.dispose();
 
@@ -128,6 +137,12 @@ public class MasterPage {
 		try {
 			List<Issue> issues = jiraApi.getIssues();
 
+			// Empty the table
+			issueTable.removeAll();
+			for (Button button : issueTableButtons) {
+				button.dispose();
+			}
+
 			// Draw the update
 			Display.getDefault().syncExec(() -> {
 				for (Issue issue : issues) {
@@ -146,6 +161,7 @@ public class MasterPage {
 					Button button = new Button(issueTable, SWT.PUSH);
 					button.setText("Test 123!");
 					button.pack();
+					issueTableButtons.add(button);
 					editor.minimumWidth = button.getSize().x;
 					editor.horizontalAlignment = SWT.LEFT;
 					editor.setEditor(button, item, 4);
@@ -160,6 +176,16 @@ public class MasterPage {
 			System.out.println("Failed to update Issues.");
 			e.printStackTrace();
 		}
+	}
+
+	private Button initIssueRefreshButton(Composite parent) {
+		Button button = new Button(parent, SWT.PUSH);
+		button.setText("Refresh issues");
+		button.addListener(SWT.Selection, event -> {
+			fillTable(issueTable);
+		});
+
+		return button;
 	}
 
 	private Link initViewAllIssuesLink(Group issueGroup) {

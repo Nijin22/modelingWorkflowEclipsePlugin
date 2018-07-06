@@ -137,14 +137,14 @@ public class MasterPage {
 		try {
 			List<Issue> issues = jiraApi.getIssues();
 
-			// Empty the table
-			issueTable.removeAll();
-			for (Button button : issueTableButtons) {
-				button.dispose();
-			}
-
 			// Draw the update
 			Display.getDefault().syncExec(() -> {
+				// Empty the table
+				issueTable.removeAll();
+				for (Button button : issueTableButtons) {
+					button.dispose();
+				}
+				
 				for (Issue issue : issues) {
 					if (issue.getStatus() == IssueStatus.Done) {
 						continue; // Skip the issues which are already done.

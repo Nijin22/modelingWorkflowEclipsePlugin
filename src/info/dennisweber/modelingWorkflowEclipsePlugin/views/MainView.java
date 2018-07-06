@@ -14,13 +14,15 @@ import org.eclipse.ui.part.ViewPart;
 
 import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.dialogs.ConfigurationDialog;
+import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
 
 public class MainView extends ViewPart {
 	private ConfigCache configCache;
 	private JiraRestApi jiraApi;
+	private GitInterface gitInterface;
 	private IProject selectedProject = null;
-	private MasterPage startseite;
+	private MasterPage masterPage;
 	Shell shell;
 
 	public MainView() {
@@ -63,29 +65,7 @@ public class MainView extends ViewPart {
 						// Assume that users dont have two active projects with the same name.
 						if (!project.equals(selectedProject)) {
 							// project was changed
-							System.out.println("Switching active project to: " + project.getName());
-							selectedProject = project;
-
-							// Close old data, if it is there
-							if (startseite != null) {
-								startseite.dispose();
-								startseite = null;
-							}
-
-							configCache = new ConfigCache();
-							if (configCache.isConfigured() == false) {
-								// Ensure the workflow tool is configured first
-
-								ConfigurationDialog configDialog = new ConfigurationDialog(shell, configCache);
-								configDialog.create();
-								configDialog.open(); // Open dialog and block until it is closed again
-							}
-
-							jiraApi = new JiraRestApi(configCache);
-
-							startseite = new MasterPage(parent, jiraApi, configCache, shell);
-							startseite.init();
-							shell.redraw();
+							onActiveProjectSwitch(parent, project);
 						}
 					}
 				}
@@ -96,6 +76,36 @@ public class MainView extends ViewPart {
 				// No text field in this combo - so this method shouldn't do anything.
 			}
 		});
+	}
+
+	private void onActiveProjectSwitch(Composite parent, IProject project) {
+		System.out.println("Switching active project to: " + project.getName());
+		selectedProject = project;
+
+		// Close old data, if it is there
+		if (masterPage != null) {
+			masterPage.dispose();
+			masterPage = null;
+		}
+
+		// Ask for configuration data
+		configCache = new ConfigCache();
+		if (configCache.isConfigured() == false) {
+			// Ensure the workflow tool is configured first
+
+			ConfigurationDialog configDialog = new ConfigurationDialog(shell, configCache);
+			configDialog.create();
+			configDialog.open(); // Open dialog and block until it is closed again
+		}
+
+		// Initialize APIs
+		jiraApi = new JiraRestApi(configCache);
+		gitInterface = new GitInterface(project);
+		
+		// Open master page
+		masterPage = new MasterPage(parent, jiraApi, configCache, shell, gitInterface);
+		masterPage.init();
+		shell.redraw();
 	}
 
 }

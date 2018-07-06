@@ -24,12 +24,14 @@ import org.eclipse.swt.widgets.TableItem;
 import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.dialogs.ConfigurationDialog;
 import info.dennisweber.modelingworkfloweclipseplugin.dialogs.StartWorkingOnIssueDialog;
+import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
 import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;
 import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
 
 public class MasterPage {
 	private JiraRestApi jiraApi;
+	private GitInterface gitInterface;
 	private Shell shell;
 	private Composite parent;
 	private ConfigCache configCache;
@@ -48,8 +50,9 @@ public class MasterPage {
 
 	private Button configButton;
 
-	public MasterPage(Composite parent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell) {
+	public MasterPage(Composite parent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell, GitInterface gitInterface) {
 		this.jiraApi = jiraApi;
+		this.gitInterface = gitInterface;
 		this.shell = shell;
 		this.parent = parent;
 		this.configCache = configCache;
@@ -164,7 +167,7 @@ public class MasterPage {
 						Button button = new Button(issueTable, SWT.PUSH);
 						button.setText("Start working on issue");
 						button.addListener(SWT.Selection, event -> {
-							StartWorkingOnIssueDialog dialog = new StartWorkingOnIssueDialog(shell, issue);
+							StartWorkingOnIssueDialog dialog = new StartWorkingOnIssueDialog(shell, issue, gitInterface);
 							dialog.create();
 							dialog.open(); // Open dialog and block until it is closed again
 						});

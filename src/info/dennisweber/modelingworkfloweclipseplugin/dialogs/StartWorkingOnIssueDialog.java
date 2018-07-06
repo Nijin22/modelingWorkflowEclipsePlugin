@@ -1,7 +1,9 @@
 package info.dennisweber.modelingworkfloweclipseplugin.dialogs;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.eclipse.jface.dialogs.IMessageProvider;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -11,21 +13,24 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
+import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
 
 public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 	private Shell parentShell;
+	private GitInterface gitInterface;
 	private Issue issue;
+	private Set<Button> branchButtons = new HashSet<Button>();
 
-	public StartWorkingOnIssueDialog(Shell parentShell, Issue issue) {
+	public StartWorkingOnIssueDialog(Shell parentShell, Issue issue, GitInterface gitInterface) {
 		super(parentShell);
 		this.parentShell = parentShell;
 		this.issue = issue;
+		this.gitInterface = gitInterface;
 	}
-	
+
 	@Override
 	public void create() {
 		super.create();
@@ -40,23 +45,35 @@ public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		GridLayout layout = new GridLayout(1, false);
 		container.setLayout(layout);
-		
+
 		Group branchSelectionGroup = new Group(container, SWT.NONE);
 		branchSelectionGroup.setLayout(new RowLayout(SWT.VERTICAL));
-		branchSelectionGroup.setText("Relevant Release:" );
-		
-		// TODO: Loop release-Branches
-		
+		branchSelectionGroup.setText("Relevant Release:");
+
+		for (String releaseBranch : gitInterface.getReleaseBranches()) {
+			Button button = new Button(branchSelectionGroup, SWT.RADIO);
+			button.setText(releaseBranch);
+			button.setData(releaseBranch);
+			branchButtons.add(button);
+		}
+
 		Button masterBranchButton = new Button(branchSelectionGroup, SWT.RADIO);
 		masterBranchButton.setText("Multiple releases or master branch");
+		masterBranchButton.setData("origin/master"); // Name of the branch
 		masterBranchButton.setSelection(true); // Select master by default
-		
+		branchButtons.add(masterBranchButton);
+
 		return area;
 	}
 
 	@Override
 	protected void okPressed() {
 		// TODO: Implement
+		for (Button button : branchButtons) {
+			if (button.getSelection()) {
+				System.out.println("Chosen branch is: " + button.getData());
+			}
+		}
 		super.okPressed();
 	}
 

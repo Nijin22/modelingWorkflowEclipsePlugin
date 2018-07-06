@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.TableItem;
 
 import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.dialogs.ConfigurationDialog;
+import info.dennisweber.modelingworkfloweclipseplugin.dialogs.StartWorkingOnIssueDialog;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
 import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;
 import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
@@ -157,14 +158,22 @@ public class MasterPage {
 					item.setText(2, issue.getStatus().toString());
 					item.setText(3, issue.getAssignee());
 
-					TableEditor editor = new TableEditor(issueTable);
-					Button button = new Button(issueTable, SWT.PUSH);
-					button.setText("Test 123!");
-					button.pack();
-					issueTableButtons.add(button);
-					editor.minimumWidth = button.getSize().x;
-					editor.horizontalAlignment = SWT.LEFT;
-					editor.setEditor(button, item, 4);
+					// Action buttons:
+					if (issue.getStatus() == IssueStatus.ToDo) {
+						TableEditor editor = new TableEditor(issueTable);
+						Button button = new Button(issueTable, SWT.PUSH);
+						button.setText("Start working on issue");
+						button.addListener(SWT.Selection, event -> {
+							StartWorkingOnIssueDialog dialog = new StartWorkingOnIssueDialog(shell, issue);
+							dialog.create();
+							dialog.open(); // Open dialog and block until it is closed again
+						});
+						button.pack();
+						issueTableButtons.add(button);
+						editor.minimumWidth = button.getSize().x;
+						editor.horizontalAlignment = SWT.LEFT;
+						editor.setEditor(button, item, 4);
+					}
 				}
 
 				// Adjust the width of columns

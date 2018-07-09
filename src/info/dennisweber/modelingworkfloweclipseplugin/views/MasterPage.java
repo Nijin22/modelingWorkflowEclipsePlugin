@@ -50,7 +50,8 @@ public class MasterPage {
 
 	private Button configButton;
 
-	public MasterPage(Composite parent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell, GitInterface gitInterface) {
+	public MasterPage(Composite parent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
+			GitInterface gitInterface) {
 		this.jiraApi = jiraApi;
 		this.gitInterface = gitInterface;
 		this.shell = shell;
@@ -148,7 +149,7 @@ public class MasterPage {
 				for (Button button : issueTableButtons) {
 					button.dispose();
 				}
-				
+
 				for (Issue issue : issues) {
 					if (issue.getStatus() == IssueStatus.Done) {
 						continue; // Skip the issues which are already done.
@@ -167,7 +168,8 @@ public class MasterPage {
 						Button button = new Button(issueTable, SWT.PUSH);
 						button.setText("Start working on issue");
 						button.addListener(SWT.Selection, event -> {
-							StartWorkingOnIssueDialog dialog = new StartWorkingOnIssueDialog(shell, issue, gitInterface);
+							StartWorkingOnIssueDialog dialog = new StartWorkingOnIssueDialog(shell, issue, gitInterface,
+									jiraApi);
 							dialog.create();
 							dialog.open(); // Open dialog and block until it is closed again
 						});

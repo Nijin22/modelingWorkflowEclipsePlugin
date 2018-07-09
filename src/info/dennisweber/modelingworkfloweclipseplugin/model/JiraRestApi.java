@@ -10,8 +10,11 @@ import com.google.gson.JsonParser;
 import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Request.Builder;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.Route;
 
@@ -47,7 +50,7 @@ public class JiraRestApi {
 		if (activeSprintCached == -1) {
 			// Not cached yet.
 			String url = configCache.getJiraApiUrl() + "agile/1.0/board/" + configCache.getJiraBoardId() + "/sprint";
-			String json = makeRequest(RequestType.GET, url);
+			String json = makeRequest(RequestType.GET, url, "");
 
 			// Find active sprint and CACHE!
 			JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
@@ -70,7 +73,7 @@ public class JiraRestApi {
 		// have more than 1000 issues in your
 		// sprint, you probably have other problems than a half-working-prototype.
 
-		String json = makeRequest(RequestType.GET, url);
+		String json = makeRequest(RequestType.GET, url, "");
 		JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
 		jsonObj.get("issues").getAsJsonArray().forEach(issueJsonElement -> {
 			JsonObject issueJsonObject = issueJsonElement.getAsJsonObject();
@@ -103,24 +106,33 @@ public class JiraRestApi {
 		return issues;
 	}
 
+	public void moveIssueInProgress(String issueId) throws IOException {
+		String url = configCache.getJiraApiUrl() + "api/2/issue/" + issueId + "/transitions";
+		String json = "{\"transition\":{\"id\":\"4\"}}"; // "Transition it via 4 (Open --> In Progress)
+		makeRequest(RequestType.POST, url, json);
+	}
 
 	private enum RequestType {
 		GET, POST
 	};
 
-	private String makeRequest(RequestType type, String url) throws IOException {
+	private String makeRequest(RequestType type, String url, String bodyJson) throws IOException {
 		System.out.println("[Requesting] " + url);
 
-		// TODO: Use requesttype
-
-		Request request = new Request.Builder().url(url).build();
+		Builder rb = new Request.Builder();
+		rb.url(url);
+		if (type == RequestType.POST) {
+			final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+			RequestBody body = RequestBody.create(JSON, bodyJson);
+			rb.post(body);
+		}
+		Request request = rb.build();
 
 		Response response = client.newCall(request).execute();
-		System.out.println("Headers were: " + response.request().headers().toString());
-		
+
 		if (response.isSuccessful()) {
 			String answer = response.body().string();
-			System.out.println("[Response (" + response.code() + ")] " + answer);
+			// System.out.println("[Response (" + response.code() + ")] " + answer);
 			return answer;
 		} else {
 			System.out.println(response.body().string());

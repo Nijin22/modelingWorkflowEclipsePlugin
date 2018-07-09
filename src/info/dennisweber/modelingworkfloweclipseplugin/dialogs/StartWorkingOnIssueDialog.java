@@ -1,5 +1,6 @@
 package info.dennisweber.modelingworkfloweclipseplugin.dialogs;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,18 +19,21 @@ import org.eclipse.swt.widgets.Shell;
 
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
+import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
 
 public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 	private Shell parentShell;
 	private GitInterface gitInterface;
+	private JiraRestApi jiraApi;
 	private Issue issue;
 	private Set<Button> branchButtons = new HashSet<Button>();
 
-	public StartWorkingOnIssueDialog(Shell parentShell, Issue issue, GitInterface gitInterface) {
+	public StartWorkingOnIssueDialog(Shell parentShell, Issue issue, GitInterface gitInterface, JiraRestApi jiraApi) {
 		super(parentShell);
 		this.parentShell = parentShell;
 		this.issue = issue;
 		this.gitInterface = gitInterface;
+		this.jiraApi = jiraApi;
 	}
 
 	@Override
@@ -79,7 +83,12 @@ public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 		String newBranchName = "issue/" + issue.getId();
 		gitInterface.createBranch(baseBranch, newBranchName);
 
-		// TODO: Update issue on jira
+		try {
+			jiraApi.moveIssueInProgress(issue.getId());
+		} catch (IOException e) {
+			MessageDialog.openError(parentShell, "Failed to update Jira Issue", e.getLocalizedMessage());
+			e.printStackTrace();
+		}
 
 		// TODO: Open In-Progress-View
 		MessageDialog.openInformation(parentShell, "Not implemented yet",

@@ -21,9 +21,9 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.dialogs.ConfigurationDialog;
 import info.dennisweber.modelingworkfloweclipseplugin.dialogs.StartWorkingOnIssueDialog;
+import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
 import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;

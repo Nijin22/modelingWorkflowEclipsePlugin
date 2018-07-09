@@ -7,7 +7,6 @@ import java.util.List;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.MediaType;

@@ -1,17 +1,21 @@
 package info.dennisweber.modelingworkfloweclipseplugin.dialogs;
 
+import java.io.IOException;
+
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
+import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 
 public class ConfigurationDialog extends TitleAreaDialog {
 	private Text repoApiTextfield;
@@ -19,6 +23,7 @@ public class ConfigurationDialog extends TitleAreaDialog {
 	private Text jiraBoardTextfield;
 	private Text usernameTextfield;
 	private Text passwordTextfield;
+	private Button storeConfigButton;
 	private Shell parentShell;
 	private ConfigCache configCache;
 
@@ -49,8 +54,7 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		initJiraBoardInput(container);
 		initUsernameInput(container);
 		initPasswordInput(container);
-
-		passwordTextfield.setFocus();
+		initStoreConfigInput(container);
 
 		return area;
 	}
@@ -59,6 +63,14 @@ public class ConfigurationDialog extends TitleAreaDialog {
 	protected void okPressed() {
 		configCache.update(repoApiTextfield.getText(), jiraApiTextfield.getText(), jiraBoardTextfield.getText(),
 				usernameTextfield.getText(), passwordTextfield.getText());
+		
+		if (storeConfigButton.getSelection()) {
+			try {
+				configCache.storeConfig();
+			} catch (IOException e) {
+				MessageDialog.openError(parentShell, "Failed to save configuration file", e.getLocalizedMessage());
+			}
+		}
 		super.okPressed();
 	}
 
@@ -136,5 +148,11 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		passwordTextfield = new Text(container, SWT.BORDER | SWT.PASSWORD);
 		passwordTextfield.setLayoutData(gd);
 		passwordTextfield.setText(configCache.getPassword());
+	}
+	
+	private void initStoreConfigInput(Composite container) {
+		storeConfigButton =  new Button(container,SWT.CHECK);
+		storeConfigButton.setText("Save configuration file to .git directory. (Passwords will be stored in clear text)");
+		storeConfigButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 	}
 }

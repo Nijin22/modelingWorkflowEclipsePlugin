@@ -12,8 +12,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.part.ViewPart;
 
-import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.dialogs.ConfigurationDialog;
+import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
 
@@ -89,7 +89,7 @@ public class MainView extends ViewPart {
 		}
 
 		// Ask for configuration data
-		configCache = new ConfigCache();
+		configCache = new ConfigCache(project);
 		if (configCache.isConfigured() == false) {
 			// Ensure the workflow tool is configured first
 

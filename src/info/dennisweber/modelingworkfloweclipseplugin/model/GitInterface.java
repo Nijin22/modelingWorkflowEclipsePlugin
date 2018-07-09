@@ -36,6 +36,19 @@ public class GitInterface {
 		}
 
 	}
+
+	public void createBranch(String baseBranch, String newBranchName) {
+		try {
+			// Checkout base branch
+			executeGitCommand("checkout " + baseBranch);
+			
+			// Create (and checkout) the new branch
+			executeGitCommand("checkout -b " + newBranchName);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private List<String> executeGitCommand(String command) throws InterruptedException, IOException {
 		List<String> results = new LinkedList<String>();
 

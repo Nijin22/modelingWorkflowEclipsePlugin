@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -68,12 +69,22 @@ public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		// TODO: Implement
+		String baseBranch = "master"; // default;
 		for (Button button : branchButtons) {
 			if (button.getSelection()) {
-				System.out.println("Chosen branch is: " + button.getData());
+				baseBranch = button.getData().toString();
 			}
 		}
+
+		String newBranchName = "issue/" + issue.getId();
+		gitInterface.createBranch(baseBranch, newBranchName);
+
+		// TODO: Update issue on jira
+
+		// TODO: Open In-Progress-View
+		MessageDialog.openInformation(parentShell, "Not implemented yet",
+				"The 'in progress' view should be opened now.");
+
 		super.okPressed();
 	}
 

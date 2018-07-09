@@ -1,7 +1,6 @@
 package info.dennisweber.modelingworkfloweclipseplugin.dialogs;
 
 import org.eclipse.jface.dialogs.IMessageProvider;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -17,6 +16,7 @@ import info.dennisweber.modelingworkfloweclipseplugin.ConfigCache;
 public class ConfigurationDialog extends TitleAreaDialog {
 	private Text repoApiTextfield;
 	private Text jiraApiTextfield;
+	private Text jiraBoardTextfield;
 	private Text usernameTextfield;
 	private Text passwordTextfield;
 	private Shell parentShell;
@@ -46,20 +46,19 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		// Init all fields
 		initRepoApiInput(container);
 		initJiraApiInput(container);
+		initJiraBoardInput(container);
 		initUsernameInput(container);
 		initPasswordInput(container);
 
 		passwordTextfield.setFocus();
-		
+
 		return area;
 	}
 
 	@Override
 	protected void okPressed() {
-		configCache.update(repoApiTextfield.getText(), jiraApiTextfield.getText(), usernameTextfield.getText(),
-				passwordTextfield.getText());
-		MessageDialog.openInformation(parentShell, "Information",
-				"In the prototype, changes are only stored in cache and might be lost on reboot of the ACTICO Modeler.");
+		configCache.update(repoApiTextfield.getText(), jiraApiTextfield.getText(), jiraBoardTextfield.getText(),
+				usernameTextfield.getText(), passwordTextfield.getText());
 		super.okPressed();
 	}
 
@@ -98,6 +97,19 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		jiraApiTextfield = new Text(container, SWT.BORDER);
 		jiraApiTextfield.setLayoutData(gd);
 		jiraApiTextfield.setText(configCache.getJiraApiUrl());
+	}
+
+	private void initJiraBoardInput(Composite container) {
+		Label label = new Label(container, SWT.NONE);
+		label.setText("Jira Board ID");
+
+		// Layout:
+		GridData gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = GridData.FILL;
+		jiraBoardTextfield = new Text(container, SWT.BORDER);
+		jiraBoardTextfield.setLayoutData(gd);
+		jiraBoardTextfield.setText(configCache.getJiraBoardId());
 	}
 
 	private void initUsernameInput(Composite container) {

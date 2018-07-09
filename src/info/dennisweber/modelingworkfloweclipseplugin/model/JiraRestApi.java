@@ -46,10 +46,8 @@ public class JiraRestApi {
 	public int getActiveSprint() throws IOException {
 		if (activeSprintCached == -1) {
 			// Not cached yet.
-			String url = configCache.getJiraApiUrl() + "sprint";
-			Request request = new Request.Builder().url(url).build();
-			Response response = client.newCall(request).execute();
-			String json = response.body().string();
+			String url = configCache.getJiraApiUrl() + "agile/1.0/board/" + configCache.getJiraBoardId() + "/sprint";
+			String json = makeRequest(RequestType.GET, url);
 
 			// Find active sprint and CACHE!
 			JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
@@ -60,23 +58,19 @@ public class JiraRestApi {
 				}
 			});
 		}
-
-		System.out.println("Debug: Active Sprint is " + activeSprintCached);
 		return activeSprintCached;
-
 	}
 
 	public List<Issue> getIssues() throws IOException {
 		LinkedList<Issue> issues = new LinkedList<Issue>();
 
-		String url = configCache.getJiraApiUrl() + "sprint" + "/" + getActiveSprint() + "/" + "issue?maxResults=999999";
-		// Current limit for ira.search.views.default.max at ACTICO is 1000, but if you
+		String url = configCache.getJiraApiUrl() + "agile/1.0/board/" + configCache.getJiraBoardId() + "/sprint" + "/"
+				+ getActiveSprint() + "/" + "issue?maxResults=999999";
+		// Current limit for jira.search.views.default.max at ACTICO is 1000, but if you
 		// have more than 1000 issues in your
 		// sprint, you probably have other problems than a half-working-prototype.
-		Request request = new Request.Builder().url(url).build();
-		Response response = client.newCall(request).execute();
-		String json = response.body().string();
 
+		String json = makeRequest(RequestType.GET, url);
 		JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
 		jsonObj.get("issues").getAsJsonArray().forEach(issueJsonElement -> {
 			JsonObject issueJsonObject = issueJsonElement.getAsJsonObject();
@@ -107,6 +101,32 @@ public class JiraRestApi {
 
 		});
 		return issues;
+	}
+
+
+	private enum RequestType {
+		GET, POST
+	};
+
+	private String makeRequest(RequestType type, String url) throws IOException {
+		System.out.println("[Requesting] " + url);
+
+		// TODO: Use requesttype
+
+		Request request = new Request.Builder().url(url).build();
+
+		Response response = client.newCall(request).execute();
+		System.out.println("Headers were: " + response.request().headers().toString());
+		
+		if (response.isSuccessful()) {
+			String answer = response.body().string();
+			System.out.println("[Response (" + response.code() + ")] " + answer);
+			return answer;
+		} else {
+			System.out.println(response.body().string());
+			throw new RuntimeException("Call failed. (" + response.code() + ")");
+		}
+
 	}
 
 	private int responseCount(Response response) {

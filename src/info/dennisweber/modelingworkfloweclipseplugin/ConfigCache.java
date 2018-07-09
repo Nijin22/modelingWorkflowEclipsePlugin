@@ -4,13 +4,15 @@ public class ConfigCache {
 	private boolean isConfigured = false;
 	private String repoApiUrl;
 	private String jiraApiUrl;
+	private String jiraBoardId;
 	private String username;
 	private String password; // Cleartext!
 
-	public void update(String repoApiUrl, String jiraApiUrl, String username, String password) {
+	public void update(String repoApiUrl, String jiraApiUrl, String jiraBoardId, String username, String password) {
 		// TODO: Verify entered data is valid
 		this.repoApiUrl = repoApiUrl;
 		this.jiraApiUrl = jiraApiUrl;
+		this.jiraBoardId = jiraBoardId;
 		this.username = username;
 		this.password = password;
 
@@ -43,10 +45,19 @@ public class ConfigCache {
 	public String getJiraApiUrl() {
 		// Set defaults for prototype
 		if (jiraApiUrl == null) {
-			jiraApiUrl = "https://jira.bfs-intra.net/rest/agile/1.0/board/137/";
+			jiraApiUrl = "https://jira.bfs-intra.net/rest/";
 		}
 
 		return jiraApiUrl;
+	}
+	
+	public String getJiraBoardId() {
+		// Defaults for prototype
+		if (jiraBoardId == null) {
+			jiraBoardId = "137";
+		}
+		
+		return jiraBoardId;
 	}
 
 	public boolean isConfigured() {

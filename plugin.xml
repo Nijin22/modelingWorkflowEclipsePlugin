@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="info.dennisweber.modelingWorkflowEclipsePlugin.viewCategory"
+            name="Collaborative Modeling ">
+      </category>
+      <view
+            category="info.dennisweber.modelingWorkflowEclipsePlugin.viewCategory"
+            class="info.dennisweber.modelingworkfloweclipseplugin.views.MainView"
+            icon="icons/sample.png"
+            id="info.dennisweber.modelingworkfloweclipseplugin.views.MainView"
+            inject="true"
+            name="Collaborative Modeling Workflow">
+      </view>
+   </extension>
+
+</plugin>

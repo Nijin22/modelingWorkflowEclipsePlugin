@@ -53,16 +53,15 @@ public class MainView extends ViewPart {
 
 		// Open master page
 		masterPage = new MasterPage(parent, jiraApi, configCache, shell, gitInterface, this);
-		masterPage.init();
-		shell.redraw();
+		parent.layout(false);
 	}
 
 	public void showWorkingOnIssuePage(Issue issue) {
 		closeAllPages();
 
 		workingOnIssuePage = new WorkingOnIssuePage(parent, jiraApi, configCache, shell, gitInterface, this, issue);
-		workingOnIssuePage.init();
-		shell.redraw();
+		
+		parent.layout(false);
 	}
 
 	private void closeAllPages() {
@@ -111,12 +110,6 @@ public class MainView extends ViewPart {
 	private void onActiveProjectSwitch(IProject project) {
 		System.out.println("Switching active project to: " + project.getName());
 		selectedProject = project;
-
-		// Close old data, if it is there
-		if (masterPage != null) {
-			masterPage.dispose();
-			masterPage = null;
-		}
 
 		// Ask for configuration data
 		configCache = new ConfigCache(project);

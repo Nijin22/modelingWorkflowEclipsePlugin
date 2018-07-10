@@ -1,6 +1,5 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -27,35 +26,31 @@ public class WorkingOnIssuePage {
 	private Link currentIssueLabel;
 	private Button backToOverviewButton;
 
-	public WorkingOnIssuePage(Composite parent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
+	public WorkingOnIssuePage(Composite originalParent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView, Issue issue) {
 		this.jiraApi = jiraApi;
 		this.gitInterface = gitInterface;
 		this.shell = shell;
-		this.parent = parent;
 		this.configCache = configCache;
 		this.mainView = mainView;
 		this.issue = issue;
-	}
 
-	public void init() {
-		parent.setLayout(new GridLayout(2, true));
+		// Layout this Page
+		parent = new Composite(originalParent, SWT.NONE);
+		parent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		GridLayout mainLayout = new GridLayout();
+		mainLayout.numColumns = 2;
+		parent.setLayout(mainLayout);
 
 		// Init headers
 		initCurrentIssueLabel();
 
+		// Init Footers
 		initBackToOverviewButton();
-
-		// Redraw the layout
-		parent.layout(true);
 	}
 
 	public void dispose() {
-		currentIssueLabel.dispose();
-		backToOverviewButton.dispose();
-
-		// Redraw the layout
-		parent.layout(true);
+		parent.dispose();
 	}
 
 	private void initCurrentIssueLabel() {

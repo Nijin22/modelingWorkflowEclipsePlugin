@@ -52,17 +52,21 @@ public class MasterPage {
 
 	private Button configButton;
 
-	public MasterPage(Composite parent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
+	public MasterPage(Composite originalParent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView) {
 		this.jiraApi = jiraApi;
 		this.gitInterface = gitInterface;
 		this.shell = shell;
-		this.parent = parent;
 		this.configCache = configCache;
 		this.mainView = mainView;
-	}
 
-	public void init() {
+		// Layout this Page
+		this.parent = new Composite(originalParent, SWT.NONE);
+		this.parent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		GridLayout mainLayout = new GridLayout();
+		mainLayout.numColumns = 1;
+		parent.setLayout(mainLayout);
+
 		// Issues:
 		issueGroup = initIssueGroup(parent);
 		issueTable = initIssueTable(issueGroup);
@@ -78,30 +82,10 @@ public class MasterPage {
 
 		// Config Button:
 		configButton = initConfigButton(parent);
-
-		// Redraw the layout
-		parent.layout(true);
 	}
 
 	public void dispose() {
-		buildReleaseFromMasterButton.dispose();
-		createNewReleaseBranchButton.dispose();
-		releaseBranchesTable.dispose();
-		releaseBranchesGroup.dispose();
-
-		viewAllIssuesLink.dispose();
-		issueLink.dispose();
-		issueRefreshButton.dispose();
-		for (Button button : issueTableButtons) {
-			button.dispose();
-		}
-		issueTable.dispose();
-		issueGroup.dispose();
-
-		configButton.dispose();
-
-		// Redraw the layout
-		parent.layout(true);
+		parent.dispose();
 	}
 
 	private Group initIssueGroup(Composite parent) {

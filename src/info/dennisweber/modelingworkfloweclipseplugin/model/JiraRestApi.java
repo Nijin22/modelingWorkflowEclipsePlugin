@@ -48,7 +48,7 @@ public class JiraRestApi {
 	public int getActiveSprint() throws IOException {
 		if (activeSprintCached == -1) {
 			// Not cached yet.
-			String url = configCache.getJiraApiUrl() + "agile/1.0/board/" + configCache.getJiraBoardId() + "/sprint";
+			String url = configCache.getJiraUrl() + "/rest/agile/1.0/board/" + configCache.getJiraBoardId() + "/sprint";
 			String json = makeRequest(RequestType.GET, url, "");
 
 			// Find active sprint and CACHE!
@@ -66,8 +66,8 @@ public class JiraRestApi {
 	public List<Issue> getIssues() throws IOException {
 		LinkedList<Issue> issues = new LinkedList<Issue>();
 
-		String url = configCache.getJiraApiUrl() + "agile/1.0/board/" + configCache.getJiraBoardId() + "/sprint" + "/"
-				+ getActiveSprint() + "/" + "issue?maxResults=999999";
+		String url = configCache.getJiraUrl() + "/rest/agile/1.0/board/" + configCache.getJiraBoardId() + "/sprint"
+				+ "/" + getActiveSprint() + "/" + "issue?maxResults=999999";
 		// Current limit for jira.search.views.default.max at ACTICO is 1000, but if you
 		// have more than 1000 issues in your
 		// sprint, you probably have other problems than a half-working-prototype.
@@ -81,22 +81,7 @@ public class JiraRestApi {
 			String title = issueJsonObject.get("fields").getAsJsonObject().get("summary").getAsString();
 			String assignee = issueJsonObject.get("fields").getAsJsonObject().get("assignee").getAsJsonObject()
 					.get("displayName").getAsString();
-			IssueStatus status;
-			String statusText = issueJsonObject.get("fields").getAsJsonObject().get("status").getAsJsonObject()
-					.get("statusCategory").getAsJsonObject().get("key").getAsString();
-			switch (statusText) {
-			case "new":
-				status = IssueStatus.ToDo;
-				break;
-			case "indeterminate":
-				status = IssueStatus.InProgress;
-				break;
-			case "done":
-				status = IssueStatus.Done;
-				break;
-			default:
-				throw new RuntimeException("Unexpected status >" + statusText + "< for issue >" + id + "<.");
-			}
+			IssueStatus status = extractStatus(issueJsonObject);
 
 			Issue issue = new Issue(id, title, status, assignee);
 			issues.add(issue);
@@ -105,8 +90,21 @@ public class JiraRestApi {
 		return issues;
 	}
 
+	public Issue getIssue(String issueId) throws IOException {
+		String url = configCache.getJiraUrl() + "/rest/api/2/issue/" + issueId;
+		String json = makeRequest(RequestType.GET, url, "");
+		JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
+
+		String title = jsonObj.get("fields").getAsJsonObject().get("summary").getAsString();
+		IssueStatus status = extractStatus(jsonObj);
+		String assignee = jsonObj.get("fields").getAsJsonObject().get("assignee").getAsJsonObject().get("displayName")
+				.getAsString();
+
+		return new Issue(issueId, title, status, assignee);
+	}
+
 	public void moveIssueInProgress(String issueId) throws IOException {
-		String url = configCache.getJiraApiUrl() + "api/2/issue/" + issueId + "/transitions";
+		String url = configCache.getJiraUrl() + "/rest/api/2/issue/" + issueId + "/transitions";
 		String json = "{\"transition\":{\"id\":\"4\"}}"; // "Transition it via 4 (Open --> In Progress)
 		makeRequest(RequestType.POST, url, json);
 	}
@@ -146,5 +144,25 @@ public class JiraRestApi {
 			result++;
 		}
 		return result;
+	}
+
+	private IssueStatus extractStatus(JsonObject issueJsonObject) {
+		IssueStatus status;
+		String statusText = issueJsonObject.get("fields").getAsJsonObject().get("status").getAsJsonObject()
+				.get("statusCategory").getAsJsonObject().get("key").getAsString();
+		switch (statusText) {
+		case "new":
+			status = IssueStatus.ToDo;
+			break;
+		case "indeterminate":
+			status = IssueStatus.InProgress;
+			break;
+		case "done":
+			status = IssueStatus.Done;
+			break;
+		default:
+			throw new RuntimeException("Unexpected status >" + statusText + "<.");
+		}
+		return status;
 	}
 }

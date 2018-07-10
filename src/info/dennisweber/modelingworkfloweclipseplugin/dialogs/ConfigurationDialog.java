@@ -19,7 +19,7 @@ import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 
 public class ConfigurationDialog extends TitleAreaDialog {
 	private Text repoApiTextfield;
-	private Text jiraApiTextfield;
+	private Text jiraTextfield;
 	private Text jiraBoardTextfield;
 	private Text usernameTextfield;
 	private Text passwordTextfield;
@@ -61,7 +61,7 @@ public class ConfigurationDialog extends TitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		configCache.update(repoApiTextfield.getText(), jiraApiTextfield.getText(), jiraBoardTextfield.getText(),
+		configCache.update(repoApiTextfield.getText(), jiraTextfield.getText(), jiraBoardTextfield.getText(),
 				usernameTextfield.getText(), passwordTextfield.getText());
 		
 		if (storeConfigButton.getSelection()) {
@@ -100,15 +100,15 @@ public class ConfigurationDialog extends TitleAreaDialog {
 
 	private void initJiraApiInput(Composite container) {
 		Label label = new Label(container, SWT.NONE);
-		label.setText("URL of Jira Board API");
+		label.setText("URL of Jira");
 
 		// Layout:
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = GridData.FILL;
-		jiraApiTextfield = new Text(container, SWT.BORDER);
-		jiraApiTextfield.setLayoutData(gd);
-		jiraApiTextfield.setText(configCache.getJiraApiUrl());
+		jiraTextfield = new Text(container, SWT.BORDER);
+		jiraTextfield.setLayoutData(gd);
+		jiraTextfield.setText(configCache.getJiraUrl());
 	}
 
 	private void initJiraBoardInput(Composite container) {

@@ -41,7 +41,7 @@ public class ConfigCache {
 	public void update(String repoApiUrl, String jiraApiUrl, String jiraBoardId, String username, String password) {
 		// TODO: Verify entered data is valid
 		dto.repoApiUrl = repoApiUrl;
-		dto.jiraApiUrl = jiraApiUrl;
+		dto.jiraUrl = jiraApiUrl;
 		dto.jiraBoardId = jiraBoardId;
 		dto.username = username;
 		dto.password = password;
@@ -82,13 +82,13 @@ public class ConfigCache {
 		return dto.repoApiUrl;
 	}
 
-	public String getJiraApiUrl() {
+	public String getJiraUrl() {
 		// Set defaults for prototype
-		if (dto.jiraApiUrl == null) {
-			dto.jiraApiUrl = "https://jira.bfs-intra.net/rest/";
+		if (dto.jiraUrl == null) {
+			dto.jiraUrl = "https://jira.bfs-intra.net";
 		}
 
-		return dto.jiraApiUrl;
+		return dto.jiraUrl;
 	}
 
 	public String getJiraBoardId() {

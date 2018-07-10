@@ -48,7 +48,32 @@ public class GitInterface {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public void checkout(String branchName) {
+		try {
+			executeGitCommand("checkout " + branchName);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
+	public String getCurrentBranch() {
+		// https://stackoverflow.com/a/12142066/3298787
+		try {
+			return executeGitCommand("rev-parse --abbrev-ref HEAD").get(0);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public void fetch() {
+		try {
+			executeGitCommand("fetch");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	private List<String> executeGitCommand(String command) throws InterruptedException, IOException {
 		List<String> results = new LinkedList<String>();
 

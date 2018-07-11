@@ -102,7 +102,7 @@ public class MasterPage {
 	}
 
 	private Table initIssueTable(Composite parent) {
-		Table issueTable = new Table(parent, SWT.SINGLE);
+		Table issueTable = new Table(parent, SWT.BORDER);
 		issueTable.setLinesVisible(true);
 		issueTable.setHeaderVisible(true);
 
@@ -250,7 +250,7 @@ public class MasterPage {
 	}
 
 	private Table initReleaseBranchesTable(Composite parent) {
-		Table releaseBranchesTable = new Table(parent, SWT.SINGLE | SWT.BORDER | SWT.FULL_SELECTION);
+		Table releaseBranchesTable = new Table(parent, SWT.BORDER);
 		releaseBranchesTable.setLinesVisible(true);
 		releaseBranchesTable.setHeaderVisible(true);
 

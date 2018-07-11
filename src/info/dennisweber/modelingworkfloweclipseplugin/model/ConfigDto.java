@@ -1,7 +1,8 @@
 package info.dennisweber.modelingworkfloweclipseplugin.model;
 
 public class ConfigDto {
-	public String repoApiUrl;
+	public String bitbucketBaseUrl;
+	public String bitbucketRepoPath;
 	public String jiraUrl;
 	public String jiraBoardId;
 	public String username;

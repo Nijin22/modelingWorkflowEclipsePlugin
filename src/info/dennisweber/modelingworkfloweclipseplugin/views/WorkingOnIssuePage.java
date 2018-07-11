@@ -33,6 +33,7 @@ public class WorkingOnIssuePage {
 	private Text commitMessageTextbox;
 	private Table newChangesTable;
 	private Table indexTable;
+	private Table logTable;
 
 	public WorkingOnIssuePage(Composite originalParent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView, Issue issue) {
@@ -87,7 +88,7 @@ public class WorkingOnIssuePage {
 		newChangesTable.setLinesVisible(true);
 		newChangesTable.setHeaderVisible(true);
 		newChangesTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		
+
 		// "Index" label
 		Label indexLabel = new Label(newChangesGroup, SWT.NONE);
 		indexLabel.setText("Index:");
@@ -97,7 +98,7 @@ public class WorkingOnIssuePage {
 		indexTable.setLinesVisible(true);
 		indexTable.setHeaderVisible(true);
 		indexTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		
+
 		// Columns for both tables
 		String[] titles = { "Ressource", "Action" };
 		for (int i = 0; i < titles.length; i++) {
@@ -137,6 +138,27 @@ public class WorkingOnIssuePage {
 		changesLogGroup.setText("Changes of this issue:");
 		changesLogGroup.setLayout(new GridLayout(1, true));
 		changesLogGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+		// "Index table"
+		logTable = new Table(changesLogGroup, SWT.BORDER);
+		logTable.setLinesVisible(true);
+		logTable.setHeaderVisible(true);
+		logTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		String[] titles = { "Time", "Message", "Action" };
+		for (int i = 0; i < titles.length; i++) {
+			new TableColumn(logTable, SWT.NONE).setText(titles[i]);
+		}
+		new TableItem(logTable, SWT.NONE).setText(0, "Table data not initialized yet.");
+		for (int i = 0; i < titles.length; i++) {
+			logTable.getColumn(i).pack();
+		}
+
+		// Create PR Button
+		Button createPrButton = new Button(changesLogGroup, SWT.NONE);
+		createPrButton.setText("Create Pull Request");
+		createPrButton.addListener(SWT.Selection, event -> {
+			Program.launch(configCache.getBbBaseUrl() + configCache.getBbRepoPath() + "pull-requests?create");
+		});
 
 	}
 

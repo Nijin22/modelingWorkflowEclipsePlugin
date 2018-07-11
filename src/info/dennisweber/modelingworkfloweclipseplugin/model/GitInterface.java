@@ -41,14 +41,14 @@ public class GitInterface {
 		try {
 			// Checkout base branch
 			executeGitCommand("checkout " + baseBranch);
-			
+
 			// Create (and checkout) the new branch
 			executeGitCommand("checkout -b " + newBranchName);
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public void checkout(String branchName) {
 		try {
 			executeGitCommand("checkout " + branchName);
@@ -65,7 +65,7 @@ public class GitInterface {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public void fetch() {
 		try {
 			executeGitCommand("fetch");
@@ -73,7 +73,26 @@ public class GitInterface {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
+	public List<CommitDto> getLog() {
+		List<CommitDto> commits = new LinkedList<CommitDto>();
+		try {
+			final String separator = "//-//"; // Separator which should not appear in a git commit message
+			List<String> result = executeGitCommand("log --format=\"%H" + separator + "%ar" + separator + "%s\"");
+			for (String commitLine : result) {
+				String[] splitted = commitLine.split(separator, 3);
+				CommitDto commit = new CommitDto();
+				commit.hash = splitted[0];
+				commit.relativeTime = splitted[1];
+				commit.message = splitted[2];
+				commits.add(commit);
+			}
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+		return commits;
+	}
+
 	private List<String> executeGitCommand(String command) throws InterruptedException, IOException {
 		List<String> results = new LinkedList<String>();
 

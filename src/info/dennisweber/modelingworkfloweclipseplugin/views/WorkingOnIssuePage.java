@@ -1,7 +1,9 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.program.Program;
@@ -16,6 +18,8 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
+import info.dennisweber.modelingworkfloweclipseplugin.dialogs.StartWorkingOnIssueDialog;
+import info.dennisweber.modelingworkfloweclipseplugin.model.CommitDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
@@ -53,10 +57,12 @@ public class WorkingOnIssuePage {
 
 		// Init widgets
 		initCurrentIssueLabel();
+		initRefreshButton();
 		initNewChanges();
 		initChangesLog();
 		initBackToOverviewButton();
-		// TODO: Refresh-Button
+
+		refreshTables();
 	}
 
 	public void dispose() {
@@ -66,10 +72,20 @@ public class WorkingOnIssuePage {
 	private void initCurrentIssueLabel() {
 		Link currentIssueLabel = new Link(parent, SWT.NONE);
 		currentIssueLabel.setText("Current Issue: <a>[" + issue.getId() + "] " + issue.getTitle() + "</a>");
-		currentIssueLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+		currentIssueLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
 		currentIssueLabel.addListener(SWT.Selection, event -> {
 			Program.launch(configCache.getJiraUrl() + "/browse/" + issue.getId());
 		});
+	}
+
+	private void initRefreshButton() {
+		Button refreshButton = new Button(parent, SWT.NONE);
+		refreshButton.setText("Refresh / Check for changes");
+		refreshButton.addListener(SWT.Selection, event -> {
+			refreshTables();
+		});
+		refreshButton.setLayoutData(new GridData(SWT.NONE, SWT.NONE, false, false, 2, 1));
+		refreshButton.pack();
 	}
 
 	private void initNewChanges() {
@@ -170,6 +186,37 @@ public class WorkingOnIssuePage {
 			gitInterface.checkout("master");
 			mainView.showMasterPage();
 		});
+	}
+
+	private void refreshTables() {
+		// TODO: Current Changes
+
+		// TODO: Index
+
+		// Log
+		logTable.removeAll();
+		for (CommitDto commit : gitInterface.getLog()) {
+			TableItem item = new TableItem(logTable, SWT.NONE);
+			item.setText(0, commit.relativeTime);
+			item.setText(1, commit.message);
+
+			// Action Button
+			TableEditor editor = new TableEditor(logTable);
+			Button button = new Button(logTable, SWT.PUSH);
+			button.setText("Revert to commit");
+			button.addListener(SWT.Selection, event -> {
+				MessageDialog.openError(shell, "Not implemented yet", "not implemented yet");
+				// TODO: Implement
+			});
+			button.pack();
+			editor.minimumWidth = button.getSize().x;
+			editor.horizontalAlignment = SWT.LEFT;
+			editor.setEditor(button, item, 2);
+		}
+		for (int i = 0; i < logTable.getColumnCount(); i++) {
+			logTable.getColumn(i).pack();
+		}
+
 	}
 
 }

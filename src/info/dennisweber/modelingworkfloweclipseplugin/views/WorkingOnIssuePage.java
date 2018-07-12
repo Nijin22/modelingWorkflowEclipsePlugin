@@ -36,8 +36,10 @@ public class WorkingOnIssuePage {
 	private Table newChangesTable;
 	private Table indexTable;
 	private Table logTable;
+	private Button commitButton;
 
 	private final String buttonKey = "SWT-BUTTON"; // Used to keep track of created SWT Buttons for later disposal
+	private boolean indexContainsFiles;
 
 	public WorkingOnIssuePage(Composite originalParent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView, Issue issue) {
@@ -154,13 +156,15 @@ public class WorkingOnIssuePage {
 		gridData.heightHint = 3 * commitMessageTextbox.getLineHeight();
 		commitMessageTextbox.setLayoutData(gridData);
 		commitMessageTextbox.setMessage("Describe your changes here.");
+		commitMessageTextbox.addModifyListener(e -> {
+			checkWhetherToEnableCommitButton();
+		});
 
-		// Commit + Sync Button
-		Button commitButton = new Button(newChangesGroup, SWT.NONE);
+		commitButton = new Button(newChangesGroup, SWT.NONE);
 		commitButton.setText("Save and sync changes");
 		commitButton.setEnabled(false);
 		commitButton.addListener(SWT.Selection, event -> {
-			// TODO: Implement
+			// TODO: Implement Save and Sync Button
 			MessageDialog.openError(shell, "Not implemented yet", "not implemented yet.");
 		});
 	}
@@ -205,6 +209,7 @@ public class WorkingOnIssuePage {
 	}
 
 	private void refreshTables() {
+		indexContainsFiles = false;
 
 		// Current Changes
 		emptyTable(newChangesTable);
@@ -246,6 +251,8 @@ public class WorkingOnIssuePage {
 			editor.horizontalAlignment = SWT.LEFT;
 			editor.setEditor(button, item, 1);
 			item.setData(buttonKey, button);
+
+			indexContainsFiles = true;
 		}
 
 		// Log
@@ -273,7 +280,7 @@ public class WorkingOnIssuePage {
 			logTable.getColumn(i).pack();
 		}
 
-		// TODO: If index is filled and commit message is filled, enable commit button
+		checkWhetherToEnableCommitButton();
 	}
 
 	/**
@@ -290,6 +297,14 @@ public class WorkingOnIssuePage {
 			}
 		}
 		table.removeAll();
+	}
+
+	private void checkWhetherToEnableCommitButton() {
+		if (indexContainsFiles && commitMessageTextbox.getText().length() > 0) {
+			commitButton.setEnabled(true);
+		} else {
+			commitButton.setEnabled(false);
+		}
 	}
 
 }

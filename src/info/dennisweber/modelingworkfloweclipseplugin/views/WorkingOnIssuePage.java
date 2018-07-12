@@ -37,6 +37,8 @@ public class WorkingOnIssuePage {
 	private Table indexTable;
 	private Table logTable;
 
+	private final String buttonKey = "SWT-BUTTON"; // Used to keep track of created SWT Buttons for later disposal
+
 	public WorkingOnIssuePage(Composite originalParent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView, Issue issue) {
 		this.jiraApi = jiraApi;
@@ -203,19 +205,51 @@ public class WorkingOnIssuePage {
 	}
 
 	private void refreshTables() {
-		final String buttonKey = "SWT-BUTTON";
-		// TODO: Current Changes
 
-		// TODO: Index
+		// Current Changes
+		emptyTable(newChangesTable);
+		for (String fileName : gitInterface.getUntrackedFiles()) {
+			TableItem item = new TableItem(newChangesTable, SWT.NONE);
+			item.setText(0, fileName);
+			
+			// Action Button
+			TableEditor editor = new TableEditor(newChangesTable);
+			Button button = new Button(newChangesTable, SWT.PUSH);
+			button.setText("Add to Index");
+			button.addListener(SWT.Selection, event -> {
+				MessageDialog.openError(shell, "Not implemented yet", "not implemented yet");
+				// TODO: Implement
+			});
+			button.pack();
+			editor.minimumWidth = button.getSize().x;
+			editor.horizontalAlignment = SWT.LEFT;
+			editor.setEditor(button, item, 1);
+			item.setData(buttonKey, button);
+		}
+
+		// Index
+		emptyTable(indexTable);
+		for (String fileName : gitInterface.getIndexedFiles()) {
+			TableItem item = new TableItem(indexTable, SWT.NONE);
+			item.setText(0, fileName);
+			
+			// Action Button
+			TableEditor editor = new TableEditor(indexTable);
+			Button button = new Button(indexTable, SWT.PUSH);
+			button.setText("Remove from Index");
+			button.addListener(SWT.Selection, event -> {
+				MessageDialog.openError(shell, "Not implemented yet", "not implemented yet");
+				// TODO: Implement
+			});
+			button.pack();
+			editor.minimumWidth = button.getSize().x;
+			editor.horizontalAlignment = SWT.LEFT;
+			editor.setEditor(button, item, 1);
+			item.setData(buttonKey, button);
+		}
 
 		// Log
-		for (TableItem item : logTable.getItems()) { // Dispose the buttons we created
-			if (item.getData(buttonKey) != null) {
-				((Button) item.getData(buttonKey)).dispose();
-			}
-		}
-		logTable.removeAll();
-
+		emptyTable(logTable);
 		for (CommitDto commit : gitInterface.getLog()) {
 			TableItem item = new TableItem(logTable, SWT.NONE);
 			item.setText(0, commit.relativeTime);
@@ -240,6 +274,22 @@ public class WorkingOnIssuePage {
 		}
 
 		// TODO: If index is filled and commit message is filled, enable commit button
+	}
+
+	/**
+	 * Empties a table, including the added Buttons. (This assumes buttons are added
+	 * as "setData" with the key "BUTTON_KEY")
+	 * 
+	 * @param table
+	 *            The table to empty.
+	 */
+	private void emptyTable(Table table) {
+		for (TableItem item : table.getItems()) { // Dispose the buttons we created
+			if (item.getData(buttonKey) != null) {
+				((Button) item.getData(buttonKey)).dispose();
+			}
+		}
+		table.removeAll();
 	}
 
 }

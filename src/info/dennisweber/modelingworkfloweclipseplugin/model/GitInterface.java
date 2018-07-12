@@ -93,6 +93,22 @@ public class GitInterface {
 		return commits;
 	}
 
+	public List<String> getUntrackedFiles() {
+		try {
+			return executeGitCommand("ls-files --others --exclude-standard");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public List<String> getIndexedFiles() {
+		try {
+			return executeGitCommand("diff --name-only --cached");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public void addAll() {
 		try {
 			executeGitCommand("add .");

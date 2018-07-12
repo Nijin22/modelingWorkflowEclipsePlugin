@@ -1,7 +1,6 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.layout.GridData;
@@ -9,8 +8,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
@@ -18,7 +17,6 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-import info.dennisweber.modelingworkfloweclipseplugin.dialogs.StartWorkingOnIssueDialog;
 import info.dennisweber.modelingworkfloweclipseplugin.model.CommitDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
@@ -105,6 +103,14 @@ public class WorkingOnIssuePage {
 		newChangesTable.setHeaderVisible(true);
 		newChangesTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
+		// "Add all to index" button
+		Button addAllToIndexBtn = new Button(newChangesGroup, SWT.NONE);
+		addAllToIndexBtn.setText("Add all ressources to index");
+		addAllToIndexBtn.addListener(SWT.Selection, e -> {
+			gitInterface.addAll();
+			refreshTables();
+		});
+
 		// "Index" label
 		Label indexLabel = new Label(newChangesGroup, SWT.NONE);
 		indexLabel.setText("Index:");
@@ -114,6 +120,14 @@ public class WorkingOnIssuePage {
 		indexTable.setLinesVisible(true);
 		indexTable.setHeaderVisible(true);
 		indexTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+		// "Remove all from index" button
+		Button removeAllFromIndexBtn = new Button(newChangesGroup, SWT.NONE);
+		removeAllFromIndexBtn.setText("Remove all resources from index");
+		removeAllFromIndexBtn.addListener(SWT.Selection, e -> {
+			gitInterface.unstageAll();
+			refreshTables();
+		});
 
 		// Columns for both tables
 		String[] titles = { "Ressource", "Action" };
@@ -225,6 +239,7 @@ public class WorkingOnIssuePage {
 			logTable.getColumn(i).pack();
 		}
 
+		// TODO: If index is filled and commit message is filled, enable commit button
 	}
 
 }

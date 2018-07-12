@@ -93,6 +93,22 @@ public class GitInterface {
 		return commits;
 	}
 
+	public void addAll() {
+		try {
+			executeGitCommand("add .");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void unstageAll() {
+		try {
+			executeGitCommand("reset --mixed");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private List<String> executeGitCommand(String command) throws InterruptedException, IOException {
 		List<String> results = new LinkedList<String>();
 

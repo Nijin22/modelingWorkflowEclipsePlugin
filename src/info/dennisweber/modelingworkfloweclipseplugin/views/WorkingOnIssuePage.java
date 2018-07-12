@@ -261,7 +261,7 @@ public class WorkingOnIssuePage {
 			button.setText("Revert to commit");
 			button.addListener(SWT.Selection, event -> {
 				MessageDialog.openError(shell, "Not implemented yet", "not implemented yet");
-				// TODO: Implement
+				// TODO: Implement "Reset to commit" button
 			});
 			button.pack();
 			editor.minimumWidth = button.getSize().x;

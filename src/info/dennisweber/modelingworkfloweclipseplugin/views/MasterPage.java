@@ -282,7 +282,7 @@ public class MasterPage {
 		button.setText("Create new active release branch");
 		button.addListener(SWT.Selection, event -> {
 			MessageDialog.openError(shell, "Not implemented", "This feature is not implemented yet.");
-			// TODO: Make the button do something useful
+			// TODO: Create Release Branch button
 		});
 
 		return button;
@@ -293,7 +293,7 @@ public class MasterPage {
 		button.setText("Build release from master");
 		button.addListener(SWT.Selection, event -> {
 			MessageDialog.openError(shell, "Not implemented", "This feature is not implemented yet.");
-			// TODO: Make the button do something useful
+			// TODO: Create Release Button
 		});
 
 		return button;

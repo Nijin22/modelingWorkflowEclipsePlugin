@@ -93,9 +93,17 @@ public class GitInterface {
 		return commits;
 	}
 
-	public List<String> getUntrackedFiles() {
+	public List<String> getNotIndexedFiles() {
 		try {
-			return executeGitCommand("ls-files --others --exclude-standard");
+			List<String> files = new LinkedList<String>();
+
+			// Get New files
+			files.addAll(executeGitCommand("ls-files --others --exclude-standard"));
+
+			// Get Modified Files
+			files.addAll(executeGitCommand("diff --name-only")); // Differences between Working Tree and Index
+
+			return files;
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -103,7 +111,7 @@ public class GitInterface {
 
 	public List<String> getIndexedFiles() {
 		try {
-			return executeGitCommand("diff --name-only --cached");
+			return executeGitCommand("diff --name-only --cached"); // Differences between Index and HEAD
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
 		}

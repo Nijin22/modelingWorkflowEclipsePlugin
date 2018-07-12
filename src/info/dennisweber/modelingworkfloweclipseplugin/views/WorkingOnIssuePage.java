@@ -213,7 +213,7 @@ public class WorkingOnIssuePage {
 
 		// Current Changes
 		emptyTable(newChangesTable);
-		for (String fileName : gitInterface.getUntrackedFiles()) {
+		for (String fileName : gitInterface.getNotIndexedFiles()) {
 			TableItem item = new TableItem(newChangesTable, SWT.NONE);
 			item.setText(0, fileName);
 

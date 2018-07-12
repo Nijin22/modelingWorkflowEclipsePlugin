@@ -12,11 +12,9 @@ import org.eclipse.core.resources.IProject;
 
 public class GitInterface {
 	private IProject eclipseProject;
-	private final String gitBaseCmd;
 
 	public GitInterface(IProject eclipseProject) {
 		this.eclipseProject = eclipseProject;
-		gitBaseCmd = "git -C \"" + eclipseProject.getLocation() + "\"";
 	}
 
 	public Set<String> getReleaseBranches() {
@@ -152,7 +150,11 @@ public class GitInterface {
 	private List<String> executeGitCommand(String command) throws InterruptedException, IOException {
 		List<String> results = new LinkedList<String>();
 
-		String cmd = gitBaseCmd + " " + command;
+		String cmd = "git "; // base command
+		cmd += "-C \"" + eclipseProject.getLocation() + "\" "; // Operate in project folder
+		cmd += "--no-optional-locks "; // Don't perform optional operations, which would require locks
+		cmd += command; // The actual command
+
 		System.out.println("[GIT Input:] " + cmd);
 		Process p = Runtime.getRuntime().exec(cmd);
 		p.waitFor();

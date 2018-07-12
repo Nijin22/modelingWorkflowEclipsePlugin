@@ -69,8 +69,8 @@ public class MasterPage {
 
 		// Issues:
 		issueGroup = initIssueGroup(parent);
-		issueTable = initIssueTable(issueGroup);
 		issueRefreshButton = initIssueRefreshButton(issueGroup);
+		issueTable = initIssueTable(issueGroup);
 		issueLink = initCreateIssueLink(issueGroup);
 		viewAllIssuesLink = initViewAllIssuesLink(issueGroup);
 
@@ -216,11 +216,10 @@ public class MasterPage {
 		Link viewAllIssuesLink = new Link(issueGroup, SWT.NONE);
 		viewAllIssuesLink.setText("<a>View all issues on Bitbucket</a>");
 		viewAllIssuesLink.addListener(SWT.Selection, event -> {
+			// Launch the default browser
 			Program.launch(
-					configCache.getJiraUrl() + "/secure/RapidBoard.jspa?rapidView=" + configCache.getJiraBoardId()); // Launch
-																														// the
-																														// default
-																														// browser
+					configCache.getJiraUrl() + "/secure/RapidBoard.jspa?rapidView=" + configCache.getJiraBoardId());
+
 		});
 
 		return viewAllIssuesLink;

@@ -189,12 +189,19 @@ public class WorkingOnIssuePage {
 	}
 
 	private void refreshTables() {
+		final String buttonKey = "SWT-BUTTON";
 		// TODO: Current Changes
 
 		// TODO: Index
 
 		// Log
+		for (TableItem item : logTable.getItems()) { // Dispose the buttons we created
+			if (item.getData(buttonKey) != null) {
+				((Button) item.getData(buttonKey)).dispose();
+			}
+		}
 		logTable.removeAll();
+
 		for (CommitDto commit : gitInterface.getLog()) {
 			TableItem item = new TableItem(logTable, SWT.NONE);
 			item.setText(0, commit.relativeTime);
@@ -212,6 +219,7 @@ public class WorkingOnIssuePage {
 			editor.minimumWidth = button.getSize().x;
 			editor.horizontalAlignment = SWT.LEFT;
 			editor.setEditor(button, item, 2);
+			item.setData(buttonKey, button);
 		}
 		for (int i = 0; i < logTable.getColumnCount(); i++) {
 			logTable.getColumn(i).pack();

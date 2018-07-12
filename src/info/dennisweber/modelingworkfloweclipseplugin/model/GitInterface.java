@@ -77,7 +77,7 @@ public class GitInterface {
 	public List<CommitDto> getLog() {
 		List<CommitDto> commits = new LinkedList<CommitDto>();
 		try {
-			final String separator = "//-//"; // Separator which should not appear in a git commit message
+			final String separator = "/"; // Separator for git. May not appear in Hash or time.
 			List<String> result = executeGitCommand("log --format=\"%H" + separator + "%ar" + separator + "%s\"");
 			for (String commitLine : result) {
 				String[] splitted = commitLine.split(separator, 3);

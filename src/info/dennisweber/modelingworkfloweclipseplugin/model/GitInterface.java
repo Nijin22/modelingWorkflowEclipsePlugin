@@ -117,9 +117,25 @@ public class GitInterface {
 		}
 	}
 
+	public void addFile(String filePath) {
+		try {
+			executeGitCommand("add " + filePath);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public void unstageAll() {
 		try {
 			executeGitCommand("reset --mixed");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void unstageFile(String filePath) {
+		try {
+			executeGitCommand("reset " + filePath);
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
 		}

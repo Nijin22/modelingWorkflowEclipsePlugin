@@ -211,14 +211,14 @@ public class WorkingOnIssuePage {
 		for (String fileName : gitInterface.getUntrackedFiles()) {
 			TableItem item = new TableItem(newChangesTable, SWT.NONE);
 			item.setText(0, fileName);
-			
+
 			// Action Button
 			TableEditor editor = new TableEditor(newChangesTable);
 			Button button = new Button(newChangesTable, SWT.PUSH);
 			button.setText("Add to Index");
 			button.addListener(SWT.Selection, event -> {
-				MessageDialog.openError(shell, "Not implemented yet", "not implemented yet");
-				// TODO: Implement
+				gitInterface.addFile(fileName);
+				refreshTables();
 			});
 			button.pack();
 			editor.minimumWidth = button.getSize().x;
@@ -232,14 +232,14 @@ public class WorkingOnIssuePage {
 		for (String fileName : gitInterface.getIndexedFiles()) {
 			TableItem item = new TableItem(indexTable, SWT.NONE);
 			item.setText(0, fileName);
-			
+
 			// Action Button
 			TableEditor editor = new TableEditor(indexTable);
 			Button button = new Button(indexTable, SWT.PUSH);
 			button.setText("Remove from Index");
 			button.addListener(SWT.Selection, event -> {
-				MessageDialog.openError(shell, "Not implemented yet", "not implemented yet");
-				// TODO: Implement
+				gitInterface.unstageFile(fileName);
+				refreshTables();
 			});
 			button.pack();
 			editor.minimumWidth = button.getSize().x;

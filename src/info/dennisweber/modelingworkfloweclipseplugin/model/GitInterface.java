@@ -3,6 +3,8 @@ package info.dennisweber.modelingworkfloweclipseplugin.model;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -145,6 +147,23 @@ public class GitInterface {
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public void commit(String commitMsg) {
+		try {
+			final String COMMIT_MSG_FILE = eclipseProject.getLocation() + "/.git/COMMIT_EDITMSG";
+
+			// Write commit message to file
+			Files.write(Paths.get(COMMIT_MSG_FILE), commitMsg.getBytes());
+
+			executeGitCommand("commit --file=\"" + COMMIT_MSG_FILE + "\"");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public void push() {
+		// TODO: Implement push command
 	}
 
 	private List<String> executeGitCommand(String command) throws InterruptedException, IOException {

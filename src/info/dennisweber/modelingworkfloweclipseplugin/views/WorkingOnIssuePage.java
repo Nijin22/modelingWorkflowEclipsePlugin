@@ -164,8 +164,10 @@ public class WorkingOnIssuePage {
 		commitButton.setText("Save and sync changes");
 		commitButton.setEnabled(false);
 		commitButton.addListener(SWT.Selection, event -> {
-			// TODO: Implement Save and Sync Button
-			MessageDialog.openError(shell, "Not implemented yet", "not implemented yet.");
+			gitInterface.commit(commitMessageTextbox.getText());
+			gitInterface.push();
+			refreshTables();
+			commitMessageTextbox.setText("");
 		});
 	}
 

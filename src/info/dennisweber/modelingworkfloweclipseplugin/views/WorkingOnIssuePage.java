@@ -21,10 +21,10 @@ import info.dennisweber.modelingworkfloweclipseplugin.model.CommitDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
-import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
+import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class WorkingOnIssuePage {
-	private JiraRestApi jiraApi;
+	private WebApi jiraApi;
 	private GitInterface gitInterface;
 	private Shell shell;
 	private Composite parent;
@@ -41,7 +41,7 @@ public class WorkingOnIssuePage {
 	private final String buttonKey = "SWT-BUTTON"; // Used to keep track of created SWT Buttons for later disposal
 	private boolean indexContainsFiles;
 
-	public WorkingOnIssuePage(Composite originalParent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
+	public WorkingOnIssuePage(Composite originalParent, WebApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView, Issue issue) {
 		this.jiraApi = jiraApi;
 		this.gitInterface = gitInterface;
@@ -168,7 +168,7 @@ public class WorkingOnIssuePage {
 			refreshTables();
 			commitMessageTextbox.setText("");
 			new Thread(() -> {
-				gitInterface.push("issue/" + issue.getId());
+				gitInterface.push("issue/" + issue.getId(), false);
 			}).start();
 		});
 	}
@@ -206,9 +206,16 @@ public class WorkingOnIssuePage {
 		Button backToOverviewButton = new Button(parent, SWT.NONE);
 		backToOverviewButton.setText("Back to Overview");
 		backToOverviewButton.addListener(SWT.Selection, event -> {
-			// TODO: What to do with uncommited changes? Stash? Commit as a "WIP"?
-			gitInterface.checkout("master");
-			mainView.showMasterPage();
+			if (gitInterface.getNotIndexedFiles().isEmpty() && gitInterface.getIndexedFiles().isEmpty()) {
+				gitInterface.checkout("master");
+				mainView.showMasterPage();
+			} else {
+				MessageDialog.openWarning(shell, "Uncommited changes",
+						"You have some uncommited changes. To prevent you from accidentally"
+								+ " loosing them, you need to either commit them or explicitly"
+								+ " remove them by resetting to a previous version.");
+			}
+
 		});
 	}
 
@@ -271,8 +278,17 @@ public class WorkingOnIssuePage {
 			Button button = new Button(logTable, SWT.PUSH);
 			button.setText("Revert to commit");
 			button.addListener(SWT.Selection, event -> {
-				MessageDialog.openError(shell, "Not implemented yet", "not implemented yet");
-				// TODO: Implement "Reset to commit" button
+				boolean confirm = MessageDialog.openConfirm(shell, "Reset changes?",
+						"Are you sure you want to reset all changes made since " + commit.relativeTime + "?\n\n"
+								+ "Those changes will be lost on this computer and the remote repository.");
+				if (confirm) {
+					gitInterface.hardReset(commit.hash);
+					new Thread(() -> {
+						System.out.println("DEBUG FORCE PUSH");
+						gitInterface.push("issue/" + issue.getId(), true);
+					}).start();
+					refreshTables();
+				}
 			});
 			button.pack();
 			editor.minimumWidth = button.getSize().x;

@@ -28,10 +28,10 @@ import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
 import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;
-import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
+import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class MasterPage {
-	private JiraRestApi jiraApi;
+	private WebApi jiraApi;
 	private GitInterface gitInterface;
 	private Shell shell;
 	private Composite parent;
@@ -52,7 +52,7 @@ public class MasterPage {
 
 	private Button configButton;
 
-	public MasterPage(Composite originalParent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
+	public MasterPage(Composite originalParent, WebApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView) {
 		this.jiraApi = jiraApi;
 		this.gitInterface = gitInterface;
@@ -281,8 +281,7 @@ public class MasterPage {
 		Button button = new Button(parent, SWT.PUSH);
 		button.setText("Create new active release branch");
 		button.addListener(SWT.Selection, event -> {
-			MessageDialog.openError(shell, "Not implemented", "This feature is not implemented yet.");
-			// TODO: Create Release Branch button
+			MessageDialog.openError(shell, "Feature not in prototype", "This feature is not available in the prototype");
 		});
 
 		return button;
@@ -292,8 +291,7 @@ public class MasterPage {
 		Button button = new Button(parent, SWT.PUSH);
 		button.setText("Build release from master");
 		button.addListener(SWT.Selection, event -> {
-			MessageDialog.openError(shell, "Not implemented", "This feature is not implemented yet.");
-			// TODO: Create Release Button
+			MessageDialog.openError(shell, "Feature not in prototype", "This feature is not available in the prototype");
 		});
 
 		return button;

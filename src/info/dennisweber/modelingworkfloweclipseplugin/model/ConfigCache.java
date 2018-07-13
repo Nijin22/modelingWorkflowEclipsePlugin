@@ -38,8 +38,8 @@ public class ConfigCache {
 		}
 	}
 
-	public void update(String bitbucketBaseUrl, String bbRepoPath, String jiraApiUrl, String jiraBoardId, String username, String password) {
-		// TODO: Verify entered data is valid
+	public void update(String bitbucketBaseUrl, String bbRepoPath, String jiraApiUrl, String jiraBoardId,
+			String username, String password) {
 		dto.bitbucketBaseUrl = bitbucketBaseUrl;
 		dto.bitbucketRepoPath = bbRepoPath;
 		dto.jiraUrl = jiraApiUrl;
@@ -77,18 +77,18 @@ public class ConfigCache {
 	public String getBbBaseUrl() {
 		// Set defaults for prototype
 		if (dto.bitbucketBaseUrl == null) {
-			dto.bitbucketBaseUrl = "https://stash.bfs-intra.net/";
+			dto.bitbucketBaseUrl = "https://stash.bfs-intra.net";
 		}
 
 		return dto.bitbucketBaseUrl;
 	}
-	
+
 	public String getBbRepoPath() {
 		// Set defaults for prototype
 		if (dto.bitbucketRepoPath == null) {
-			dto.bitbucketRepoPath = "users/denweb01/repos/masterthesis-example-model/";
+			dto.bitbucketRepoPath = "/users/denweb01/repos/masterthesis-example-model/";
 		}
-		
+
 		return dto.bitbucketRepoPath;
 	}
 

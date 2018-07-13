@@ -281,8 +281,7 @@ public class MasterPage {
 		Button button = new Button(parent, SWT.PUSH);
 		button.setText("Create new active release branch");
 		button.addListener(SWT.Selection, event -> {
-			MessageDialog.openError(shell, "Not implemented", "This feature is not implemented yet.");
-			// TODO: Create Release Branch button
+			MessageDialog.openError(shell, "Feature not in prototype", "This feature is not available in the prototype");
 		});
 
 		return button;
@@ -292,8 +291,7 @@ public class MasterPage {
 		Button button = new Button(parent, SWT.PUSH);
 		button.setText("Build release from master");
 		button.addListener(SWT.Selection, event -> {
-			MessageDialog.openError(shell, "Not implemented", "This feature is not implemented yet.");
-			// TODO: Create Release Button
+			MessageDialog.openError(shell, "Feature not in prototype", "This feature is not available in the prototype");
 		});
 
 		return button;

@@ -168,7 +168,6 @@ public class GitInterface {
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
 		}
-		// TODO: Implement push command
 	}
 
 	private List<String> executeGitCommand(String command) throws InterruptedException, IOException {

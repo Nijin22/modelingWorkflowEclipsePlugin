@@ -81,7 +81,7 @@ public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 		}
 
 		String newBranchName = "issue/" + issue.getId();
-		gitInterface.createBranch(baseBranch, newBranchName);
+		gitInterface.createBranch(baseBranch, newBranchName); // Also checks out the branch
 
 		try {
 			jiraApi.moveIssueInProgress(issue.getId());
@@ -89,10 +89,6 @@ public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 			MessageDialog.openError(parentShell, "Failed to update Jira Issue", e.getLocalizedMessage());
 			e.printStackTrace();
 		}
-
-		// TODO: Open In-Progress-View
-		MessageDialog.openInformation(parentShell, "Not implemented yet",
-				"The 'in progress' view should be opened now.");
 
 		super.okPressed();
 	}

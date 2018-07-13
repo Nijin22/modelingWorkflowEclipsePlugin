@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.layout.GridData;
@@ -35,6 +36,7 @@ public class MasterPage {
 	private Shell shell;
 	private Composite parent;
 	private ConfigCache configCache;
+	private MainView mainView;
 
 	private Group releaseBranchesGroup;
 	private Table issueTable;
@@ -50,20 +52,25 @@ public class MasterPage {
 
 	private Button configButton;
 
-	public MasterPage(Composite parent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
-			GitInterface gitInterface) {
+	public MasterPage(Composite originalParent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
+			GitInterface gitInterface, MainView mainView) {
 		this.jiraApi = jiraApi;
 		this.gitInterface = gitInterface;
 		this.shell = shell;
-		this.parent = parent;
 		this.configCache = configCache;
-	}
+		this.mainView = mainView;
 
-	public void init() {
+		// Layout this Page
+		this.parent = new Composite(originalParent, SWT.NONE);
+		this.parent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		GridLayout mainLayout = new GridLayout();
+		mainLayout.numColumns = 1;
+		parent.setLayout(mainLayout);
+
 		// Issues:
 		issueGroup = initIssueGroup(parent);
-		issueTable = initIssueTable(issueGroup);
 		issueRefreshButton = initIssueRefreshButton(issueGroup);
+		issueTable = initIssueTable(issueGroup);
 		issueLink = initCreateIssueLink(issueGroup);
 		viewAllIssuesLink = initViewAllIssuesLink(issueGroup);
 
@@ -75,30 +82,10 @@ public class MasterPage {
 
 		// Config Button:
 		configButton = initConfigButton(parent);
-
-		// Redraw the layout
-		parent.layout(true);
 	}
 
 	public void dispose() {
-		buildReleaseFromMasterButton.dispose();
-		createNewReleaseBranchButton.dispose();
-		releaseBranchesTable.dispose();
-		releaseBranchesGroup.dispose();
-
-		viewAllIssuesLink.dispose();
-		issueLink.dispose();
-		issueRefreshButton.dispose();
-		for (Button button : issueTableButtons) {
-			button.dispose();
-		}
-		issueTable.dispose();
-		issueGroup.dispose();
-
-		configButton.dispose();
-
-		// Redraw the layout
-		parent.layout(true);
+		parent.dispose();
 	}
 
 	private Group initIssueGroup(Composite parent) {
@@ -115,7 +102,7 @@ public class MasterPage {
 	}
 
 	private Table initIssueTable(Composite parent) {
-		Table issueTable = new Table(parent, SWT.SINGLE);
+		Table issueTable = new Table(parent, SWT.BORDER);
 		issueTable.setLinesVisible(true);
 		issueTable.setHeaderVisible(true);
 
@@ -163,7 +150,7 @@ public class MasterPage {
 					item.setText(3, issue.getAssignee());
 
 					// Action buttons:
-					if (issue.getStatus() == IssueStatus.ToDo) {
+					if (issue.getStatus() == IssueStatus.ToDo) { // Start working on issue:
 						TableEditor editor = new TableEditor(issueTable);
 						Button button = new Button(issueTable, SWT.PUSH);
 						button.setText("Start working on issue");
@@ -171,7 +158,30 @@ public class MasterPage {
 							StartWorkingOnIssueDialog dialog = new StartWorkingOnIssueDialog(shell, issue, gitInterface,
 									jiraApi);
 							dialog.create();
-							dialog.open(); // Open dialog and block until it is closed again
+							switch (dialog.open()) {// Open dialog and block until it is closed again
+							case Window.OK:
+								// Window closed via OK-Button
+								mainView.showWorkingOnIssuePage(issue);
+								break;
+							default:
+								// I.e. Cancel-Button
+								break;
+							}
+						});
+						button.pack();
+						issueTableButtons.add(button);
+						editor.minimumWidth = button.getSize().x;
+						editor.horizontalAlignment = SWT.LEFT;
+						editor.setEditor(button, item, 4);
+					}
+					if (issue.getStatus() == IssueStatus.InProgress) { // Continue working on issue:
+						TableEditor editor = new TableEditor(issueTable);
+						Button button = new Button(issueTable, SWT.PUSH);
+						button.setText("Continue working on issue");
+						button.addListener(SWT.Selection, event -> {
+							gitInterface.fetch();
+							gitInterface.checkout("issue/" + issue.getId());
+							mainView.showWorkingOnIssuePage(issue);
 						});
 						button.pack();
 						issueTableButtons.add(button);
@@ -206,8 +216,10 @@ public class MasterPage {
 		Link viewAllIssuesLink = new Link(issueGroup, SWT.NONE);
 		viewAllIssuesLink.setText("<a>View all issues on Bitbucket</a>");
 		viewAllIssuesLink.addListener(SWT.Selection, event -> {
-			Program.launch("https://example.org"); // Launch the default browser
-			// TODO: This should link somewhere more useful.
+			// Launch the default browser
+			Program.launch(
+					configCache.getJiraUrl() + "/secure/RapidBoard.jspa?rapidView=" + configCache.getJiraBoardId());
+
 		});
 
 		return viewAllIssuesLink;
@@ -217,8 +229,7 @@ public class MasterPage {
 		Link createIssueLink = new Link(issueGroup, SWT.NONE);
 		createIssueLink.setText("<a>Create new issue</a>");
 		createIssueLink.addListener(SWT.Selection, event -> {
-			Program.launch("https://example.org"); // Launch the default browser
-			// TODO: This should link somewhere more useful.
+			Program.launch(configCache.getJiraUrl() + "/secure/CreateIssue!default.jspa"); // Launch the default browser
 		});
 
 		return createIssueLink;
@@ -238,7 +249,7 @@ public class MasterPage {
 	}
 
 	private Table initReleaseBranchesTable(Composite parent) {
-		Table releaseBranchesTable = new Table(parent, SWT.SINGLE | SWT.BORDER | SWT.FULL_SELECTION);
+		Table releaseBranchesTable = new Table(parent, SWT.BORDER);
 		releaseBranchesTable.setLinesVisible(true);
 		releaseBranchesTable.setHeaderVisible(true);
 
@@ -271,7 +282,7 @@ public class MasterPage {
 		button.setText("Create new active release branch");
 		button.addListener(SWT.Selection, event -> {
 			MessageDialog.openError(shell, "Not implemented", "This feature is not implemented yet.");
-			// TODO: Make the button do something useful
+			// TODO: Create Release Branch button
 		});
 
 		return button;
@@ -282,7 +293,7 @@ public class MasterPage {
 		button.setText("Build release from master");
 		button.addListener(SWT.Selection, event -> {
 			MessageDialog.openError(shell, "Not implemented", "This feature is not implemented yet.");
-			// TODO: Make the button do something useful
+			// TODO: Create Release Button
 		});
 
 		return button;

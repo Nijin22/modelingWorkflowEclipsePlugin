@@ -18,8 +18,9 @@ import org.eclipse.swt.widgets.Text;
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 
 public class ConfigurationDialog extends TitleAreaDialog {
-	private Text repoApiTextfield;
-	private Text jiraApiTextfield;
+	private Text bbBaseUrlTextfield;
+	private Text bbRepoPathTextfieldText;
+	private Text jiraTextfield;
 	private Text jiraBoardTextfield;
 	private Text usernameTextfield;
 	private Text passwordTextfield;
@@ -49,7 +50,8 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		container.setLayout(layout);
 
 		// Init all fields
-		initRepoApiInput(container);
+		initBbBaseUrlInput(container);
+		initBbRepoPathInput(container);
 		initJiraApiInput(container);
 		initJiraBoardInput(container);
 		initUsernameInput(container);
@@ -61,9 +63,9 @@ public class ConfigurationDialog extends TitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		configCache.update(repoApiTextfield.getText(), jiraApiTextfield.getText(), jiraBoardTextfield.getText(),
-				usernameTextfield.getText(), passwordTextfield.getText());
-		
+		configCache.update(bbBaseUrlTextfield.getText(), bbRepoPathTextfieldText.getText(), jiraTextfield.getText(),
+				jiraBoardTextfield.getText(), usernameTextfield.getText(), passwordTextfield.getText());
+
 		if (storeConfigButton.getSelection()) {
 			try {
 				configCache.storeConfig();
@@ -84,31 +86,44 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		return false;
 	}
 
-	private void initRepoApiInput(Composite container) {
+	private void initBbBaseUrlInput(Composite container) {
 		Label label = new Label(container, SWT.NONE);
-		label.setText("URL of Repository API");
+		label.setText("URL of Bitbucket");
 
 		// Layout:
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = GridData.FILL;
-		repoApiTextfield = new Text(container, SWT.BORDER);
-		repoApiTextfield.setLayoutData(gd);
-		repoApiTextfield.setText(configCache.getRepoApiUrl());
+		bbBaseUrlTextfield = new Text(container, SWT.BORDER);
+		bbBaseUrlTextfield.setLayoutData(gd);
+		bbBaseUrlTextfield.setText(configCache.getBbBaseUrl());
 
+	}
+
+	private void initBbRepoPathInput(Composite container) {
+		Label label = new Label(container, SWT.NONE);
+		label.setText("Bitbucket path to project");
+
+		// Layout:
+		GridData gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = GridData.FILL;
+		bbRepoPathTextfieldText = new Text(container, SWT.BORDER);
+		bbRepoPathTextfieldText.setLayoutData(gd);
+		bbRepoPathTextfieldText.setText(configCache.getBbRepoPath());
 	}
 
 	private void initJiraApiInput(Composite container) {
 		Label label = new Label(container, SWT.NONE);
-		label.setText("URL of Jira Board API");
+		label.setText("URL of Jira");
 
 		// Layout:
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = GridData.FILL;
-		jiraApiTextfield = new Text(container, SWT.BORDER);
-		jiraApiTextfield.setLayoutData(gd);
-		jiraApiTextfield.setText(configCache.getJiraApiUrl());
+		jiraTextfield = new Text(container, SWT.BORDER);
+		jiraTextfield.setLayoutData(gd);
+		jiraTextfield.setText(configCache.getJiraUrl());
 	}
 
 	private void initJiraBoardInput(Composite container) {
@@ -149,10 +164,11 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		passwordTextfield.setLayoutData(gd);
 		passwordTextfield.setText(configCache.getPassword());
 	}
-	
+
 	private void initStoreConfigInput(Composite container) {
-		storeConfigButton =  new Button(container,SWT.CHECK);
-		storeConfigButton.setText("Save configuration file to .git directory. (Passwords will be stored in clear text)");
+		storeConfigButton = new Button(container, SWT.CHECK);
+		storeConfigButton
+				.setText("Save configuration file to .git directory. (Passwords will be stored in clear text)");
 		storeConfigButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 	}
 }

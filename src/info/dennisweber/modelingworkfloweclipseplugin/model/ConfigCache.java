@@ -38,10 +38,11 @@ public class ConfigCache {
 		}
 	}
 
-	public void update(String repoApiUrl, String jiraApiUrl, String jiraBoardId, String username, String password) {
+	public void update(String bitbucketBaseUrl, String bbRepoPath, String jiraApiUrl, String jiraBoardId, String username, String password) {
 		// TODO: Verify entered data is valid
-		dto.repoApiUrl = repoApiUrl;
-		dto.jiraApiUrl = jiraApiUrl;
+		dto.bitbucketBaseUrl = bitbucketBaseUrl;
+		dto.bitbucketRepoPath = bbRepoPath;
+		dto.jiraUrl = jiraApiUrl;
 		dto.jiraBoardId = jiraBoardId;
 		dto.username = username;
 		dto.password = password;
@@ -73,22 +74,31 @@ public class ConfigCache {
 		return dto.password;
 	}
 
-	public String getRepoApiUrl() {
+	public String getBbBaseUrl() {
 		// Set defaults for prototype
-		if (dto.repoApiUrl == null) {
-			dto.repoApiUrl = "https://stash.bfs-intra.net/rest/api/1.0/users/denweb01/repos/masterthesis-example-model";
+		if (dto.bitbucketBaseUrl == null) {
+			dto.bitbucketBaseUrl = "https://stash.bfs-intra.net/";
 		}
 
-		return dto.repoApiUrl;
+		return dto.bitbucketBaseUrl;
+	}
+	
+	public String getBbRepoPath() {
+		// Set defaults for prototype
+		if (dto.bitbucketRepoPath == null) {
+			dto.bitbucketRepoPath = "users/denweb01/repos/masterthesis-example-model/";
+		}
+		
+		return dto.bitbucketRepoPath;
 	}
 
-	public String getJiraApiUrl() {
+	public String getJiraUrl() {
 		// Set defaults for prototype
-		if (dto.jiraApiUrl == null) {
-			dto.jiraApiUrl = "https://jira.bfs-intra.net/rest/";
+		if (dto.jiraUrl == null) {
+			dto.jiraUrl = "https://jira.bfs-intra.net";
 		}
 
-		return dto.jiraApiUrl;
+		return dto.jiraUrl;
 	}
 
 	public String getJiraBoardId() {

@@ -3,6 +3,8 @@ package info.dennisweber.modelingworkfloweclipseplugin.model;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,11 +14,9 @@ import org.eclipse.core.resources.IProject;
 
 public class GitInterface {
 	private IProject eclipseProject;
-	private final String gitBaseCmd;
 
 	public GitInterface(IProject eclipseProject) {
 		this.eclipseProject = eclipseProject;
-		gitBaseCmd = "git -C \"" + eclipseProject.getLocation() + "\"";
 	}
 
 	public Set<String> getReleaseBranches() {
@@ -41,7 +41,7 @@ public class GitInterface {
 		try {
 			// Checkout base branch
 			executeGitCommand("checkout " + baseBranch);
-			
+
 			// Create (and checkout) the new branch
 			executeGitCommand("checkout -b " + newBranchName);
 		} catch (InterruptedException | IOException e) {
@@ -49,10 +49,136 @@ public class GitInterface {
 		}
 	}
 
+	public void checkout(String branchName) {
+		try {
+			executeGitCommand("checkout " + branchName);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public String getCurrentBranch() {
+		// https://stackoverflow.com/a/12142066/3298787
+		try {
+			return executeGitCommand("rev-parse --abbrev-ref HEAD").get(0);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void fetch() {
+		try {
+			executeGitCommand("fetch");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public List<CommitDto> getLog() {
+		List<CommitDto> commits = new LinkedList<CommitDto>();
+		try {
+			final String separator = "/"; // Separator for git. May not appear in Hash or time.
+			List<String> result = executeGitCommand("log --format=\"%H" + separator + "%ar" + separator + "%s\"");
+			for (String commitLine : result) {
+				String[] splitted = commitLine.split(separator, 3);
+				CommitDto commit = new CommitDto();
+				commit.hash = splitted[0];
+				commit.relativeTime = splitted[1];
+				commit.message = splitted[2];
+				commits.add(commit);
+			}
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+		return commits;
+	}
+
+	public List<String> getNotIndexedFiles() {
+		try {
+			List<String> files = new LinkedList<String>();
+
+			// Get New files
+			files.addAll(executeGitCommand("ls-files --others --exclude-standard"));
+
+			// Get Modified Files
+			files.addAll(executeGitCommand("diff --name-only")); // Differences between Working Tree and Index
+
+			return files;
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public List<String> getIndexedFiles() {
+		try {
+			return executeGitCommand("diff --name-only --cached"); // Differences between Index and HEAD
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void addAll() {
+		try {
+			executeGitCommand("add .");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void addFile(String filePath) {
+		try {
+			executeGitCommand("add " + filePath);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void unstageAll() {
+		try {
+			executeGitCommand("reset --mixed");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void unstageFile(String filePath) {
+		try {
+			executeGitCommand("reset " + filePath);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void commit(String commitMsg) {
+		try {
+			final String COMMIT_MSG_FILE = eclipseProject.getLocation() + "/.git/COMMIT_EDITMSG";
+
+			// Write commit message to file
+			Files.write(Paths.get(COMMIT_MSG_FILE), commitMsg.getBytes());
+
+			executeGitCommand("commit --file=\"" + COMMIT_MSG_FILE + "\"");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public void push(String remoteBranchName) {
+		try {
+			executeGitCommand("push origin " + remoteBranchName);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+		// TODO: Implement push command
+	}
+
 	private List<String> executeGitCommand(String command) throws InterruptedException, IOException {
 		List<String> results = new LinkedList<String>();
 
-		String cmd = gitBaseCmd + " " + command;
+		String cmd = "git "; // base command
+		cmd += "-C \"" + eclipseProject.getLocation() + "\" "; // Operate in project folder
+		cmd += "--no-optional-locks "; // Don't perform optional operations, which would require locks
+		cmd += command; // The actual command
+
 		System.out.println("[GIT Input:] " + cmd);
 		Process p = Runtime.getRuntime().exec(cmd);
 		p.waitFor();

@@ -1,7 +1,10 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
+import java.io.IOException;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -15,6 +18,7 @@ import org.eclipse.ui.part.ViewPart;
 import info.dennisweber.modelingworkfloweclipseplugin.dialogs.ConfigurationDialog;
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
+import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
 import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
 
 public class MainView extends ViewPart {
@@ -23,7 +27,9 @@ public class MainView extends ViewPart {
 	private GitInterface gitInterface;
 	private IProject selectedProject = null;
 	private MasterPage masterPage;
-	Shell shell;
+	private WorkingOnIssuePage workingOnIssuePage;
+	private Shell shell;
+	private Composite parent;
 
 	public MainView() {
 		super();
@@ -37,16 +43,39 @@ public class MainView extends ViewPart {
 		GridLayout mainLayout = new GridLayout();
 		mainLayout.numColumns = 1;
 		parent.setLayout(mainLayout);
+		this.parent = parent;
 
-		initProjectSelectionCombo(parent);
-
-		if (selectedProject != null) {
-
-		}
-
+		initProjectSelectionCombo();
 	}
 
-	private void initProjectSelectionCombo(Composite parent) {
+	public void showMasterPage() {
+		closeAllPages();
+
+		// Open master page
+		masterPage = new MasterPage(parent, jiraApi, configCache, shell, gitInterface, this);
+		parent.layout(false);
+	}
+
+	public void showWorkingOnIssuePage(Issue issue) {
+		closeAllPages();
+
+		workingOnIssuePage = new WorkingOnIssuePage(parent, jiraApi, configCache, shell, gitInterface, this, issue);
+		
+		parent.layout(false);
+	}
+
+	private void closeAllPages() {
+		if (masterPage != null) {
+			masterPage.dispose();
+			masterPage = null;
+		}
+		if (workingOnIssuePage != null) {
+			workingOnIssuePage.dispose();
+			workingOnIssuePage = null;
+		}
+	}
+
+	private void initProjectSelectionCombo() {
 		Label label = new Label(parent, SWT.NONE);
 		label.setText("Active project:");
 
@@ -65,7 +94,7 @@ public class MainView extends ViewPart {
 						// Assume that users dont have two active projects with the same name.
 						if (!project.equals(selectedProject)) {
 							// project was changed
-							onActiveProjectSwitch(parent, project);
+							onActiveProjectSwitch(project);
 						}
 					}
 				}
@@ -78,15 +107,9 @@ public class MainView extends ViewPart {
 		});
 	}
 
-	private void onActiveProjectSwitch(Composite parent, IProject project) {
+	private void onActiveProjectSwitch(IProject project) {
 		System.out.println("Switching active project to: " + project.getName());
 		selectedProject = project;
-
-		// Close old data, if it is there
-		if (masterPage != null) {
-			masterPage.dispose();
-			masterPage = null;
-		}
 
 		// Ask for configuration data
 		configCache = new ConfigCache(project);
@@ -101,11 +124,27 @@ public class MainView extends ViewPart {
 		// Initialize APIs
 		jiraApi = new JiraRestApi(configCache);
 		gitInterface = new GitInterface(project);
-		
-		// Open master page
-		masterPage = new MasterPage(parent, jiraApi, configCache, shell, gitInterface);
-		masterPage.init();
-		shell.redraw();
+
+		// Detect if that project is on the "master" or a issue-branch and open
+		// corresponding page
+		String currentBranch = gitInterface.getCurrentBranch();
+		if (currentBranch.equals("master")) {
+			System.out.println("On >master<. Opening MasterPage.");
+			showMasterPage();
+		} else if (currentBranch.startsWith("issue/")) {
+			System.out.println("On >" + currentBranch + "<. Opening WorkingOnIssuePage.");
+			try {
+				String issueId = currentBranch.replace("issue/", "");
+				Issue issue = jiraApi.getIssue(issueId);
+				showWorkingOnIssuePage(issue);
+			} catch (IOException e) {
+				MessageDialog.openError(shell, "Failed to determine active Issue branch", e.getLocalizedMessage());
+			}
+		} else {
+			MessageDialog.openError(shell, "Unexpected git branch",
+					"The repository is neither on master, nor a issue branch. Please commit your changes and 'git checkout master' manually.");
+		}
+
 	}
 
 }

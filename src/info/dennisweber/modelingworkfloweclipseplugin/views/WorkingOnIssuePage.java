@@ -168,7 +168,7 @@ public class WorkingOnIssuePage {
 			refreshTables();
 			commitMessageTextbox.setText("");
 			new Thread(() -> {
-				gitInterface.push("issue/" + issue.getId());
+				gitInterface.push("issue/" + issue.getId(), false);
 			}).start();
 		});
 	}
@@ -278,8 +278,17 @@ public class WorkingOnIssuePage {
 			Button button = new Button(logTable, SWT.PUSH);
 			button.setText("Revert to commit");
 			button.addListener(SWT.Selection, event -> {
-				MessageDialog.openError(shell, "Not implemented yet", "not implemented yet");
-				// TODO: Implement "Reset to commit" button
+				boolean confirm = MessageDialog.openConfirm(shell, "Reset changes?",
+						"Are you sure you want to reset all changes made since " + commit.relativeTime + "?\n\n"
+								+ "Those changes will be lost on this computer and the remote repository.");
+				if (confirm) {
+					gitInterface.hardReset(commit.hash);
+					new Thread(() -> {
+						System.out.println("DEBUG FORCE PUSH");
+						gitInterface.push("issue/" + issue.getId(), true);
+					}).start();
+					refreshTables();
+				}
 			});
 			button.pack();
 			editor.minimumWidth = button.getSize().x;

@@ -161,10 +161,22 @@ public class GitInterface {
 			throw new RuntimeException(e);
 		}
 	}
-	
-	public void push(String remoteBranchName) {
+
+	public void push(String remoteBranchName, boolean force) {
 		try {
-			executeGitCommand("push origin " + remoteBranchName);
+			String forceInsert = "";
+			if (force) {
+				forceInsert = "--force ";
+			}
+			executeGitCommand("push " + forceInsert + "origin " + remoteBranchName);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void hardReset(String commitIdentifier) {
+		try {
+			executeGitCommand("reset --hard " + commitIdentifier);
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
 		}

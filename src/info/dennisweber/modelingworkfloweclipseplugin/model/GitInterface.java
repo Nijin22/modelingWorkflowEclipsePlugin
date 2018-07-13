@@ -162,7 +162,12 @@ public class GitInterface {
 		}
 	}
 	
-	public void push() {
+	public void push(String remoteBranchName) {
+		try {
+			executeGitCommand("push origin " + remoteBranchName);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
 		// TODO: Implement push command
 	}
 

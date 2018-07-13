@@ -165,9 +165,11 @@ public class WorkingOnIssuePage {
 		commitButton.setEnabled(false);
 		commitButton.addListener(SWT.Selection, event -> {
 			gitInterface.commit(commitMessageTextbox.getText());
-			gitInterface.push();
 			refreshTables();
 			commitMessageTextbox.setText("");
+			new Thread(() -> {
+				gitInterface.push("issue/" + issue.getId());
+			}).start();
 		});
 	}
 

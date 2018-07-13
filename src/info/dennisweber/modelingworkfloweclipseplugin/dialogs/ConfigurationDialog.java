@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
+import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class ConfigurationDialog extends TitleAreaDialog {
 	private Text bbBaseUrlTextfield;
@@ -66,14 +67,23 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		configCache.update(bbBaseUrlTextfield.getText(), bbRepoPathTextfieldText.getText(), jiraTextfield.getText(),
 				jiraBoardTextfield.getText(), usernameTextfield.getText(), passwordTextfield.getText());
 
-		if (storeConfigButton.getSelection()) {
-			try {
-				configCache.storeConfig();
-			} catch (IOException e) {
-				MessageDialog.openError(parentShell, "Failed to save configuration file", e.getLocalizedMessage());
+		// Verify validity of config:
+		if (WebApi.TestConfigCache(configCache)) {
+			// Config is valid
+			if (storeConfigButton.getSelection()) {
+				try {
+					configCache.storeConfig();
+				} catch (IOException e) {
+					MessageDialog.openError(parentShell, "Failed to save configuration file", e.getLocalizedMessage());
+				}
 			}
+			super.okPressed();
+		} else {
+			// Config is not valid
+			MessageDialog.openError(parentShell, "Invalid configuration",
+					"This configuration is invalid. Please re-check everything you've entered.");
 		}
-		super.okPressed();
+
 	}
 
 	@Override

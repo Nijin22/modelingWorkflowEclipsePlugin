@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.xml.ws.WebServiceException;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -23,33 +25,35 @@ public class WebApi {
 
 	private int activeSprintCached = -1;
 
+	public static boolean TestConfigCache(ConfigCache cacheToTest) {
+		OkHttpClient testClient = createClient(cacheToTest);
+		String url;
+
+		try {
+			// Check bitbucket
+			url = cacheToTest.getBbBaseUrl() + "/rest/api/1.0" + cacheToTest.getBbRepoPath();
+			makeRequest(testClient, RequestType.GET, url, "");
+
+			// Check Jira
+			url = cacheToTest.getJiraUrl() + "/rest/agile/1.0/board/" + cacheToTest.getJiraBoardId();
+			makeRequest(testClient, RequestType.GET, url, "");
+		} catch (Exception e) {
+			return false;
+		}
+
+		return true;
+	}
+
 	public WebApi(ConfigCache configCache) {
+		client = createClient(configCache);
 		this.configCache = configCache;
-
-		// Use authentication
-		// See: https://stackoverflow.com/a/34819354/3298787
-		OkHttpClient.Builder builder = new OkHttpClient.Builder();
-		builder.authenticator(new Authenticator() {
-
-			@Override
-			public Request authenticate(Route route, Response response) throws IOException {
-				if (responseCount(response) >= 3) {
-					System.out.println("DEBUG: Giving up on authentication.");
-					return null; // If we've failed 3 times, give up.
-				}
-				String credential = Credentials.basic(configCache.getUsername(), configCache.getPassword());
-				return response.request().newBuilder().header("Authorization", credential).build();
-			}
-		});
-
-		client = builder.build();
 	}
 
 	public int getActiveSprint() throws IOException {
 		if (activeSprintCached == -1) {
 			// Not cached yet.
 			String url = configCache.getJiraUrl() + "/rest/agile/1.0/board/" + configCache.getJiraBoardId() + "/sprint";
-			String json = makeRequest(RequestType.GET, url, "");
+			String json = makeRequest(client, RequestType.GET, url, "");
 
 			// Find active sprint and CACHE!
 			JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
@@ -72,7 +76,7 @@ public class WebApi {
 		// have more than 1000 issues in your
 		// sprint, you probably have other problems than a half-working-prototype.
 
-		String json = makeRequest(RequestType.GET, url, "");
+		String json = makeRequest(client, RequestType.GET, url, "");
 		JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
 		jsonObj.get("issues").getAsJsonArray().forEach(issueJsonElement -> {
 			JsonObject issueJsonObject = issueJsonElement.getAsJsonObject();
@@ -92,7 +96,7 @@ public class WebApi {
 
 	public Issue getIssue(String issueId) throws IOException {
 		String url = configCache.getJiraUrl() + "/rest/api/2/issue/" + issueId;
-		String json = makeRequest(RequestType.GET, url, "");
+		String json = makeRequest(client, RequestType.GET, url, "");
 		JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
 
 		String title = jsonObj.get("fields").getAsJsonObject().get("summary").getAsString();
@@ -106,45 +110,12 @@ public class WebApi {
 	public void moveIssueInProgress(String issueId) throws IOException {
 		String url = configCache.getJiraUrl() + "/rest/api/2/issue/" + issueId + "/transitions";
 		String json = "{\"transition\":{\"id\":\"4\"}}"; // "Transition it via 4 (Open --> In Progress)
-		makeRequest(RequestType.POST, url, json);
+		makeRequest(client, RequestType.POST, url, json);
 	}
 
 	private enum RequestType {
 		GET, POST
 	};
-
-	private String makeRequest(RequestType type, String url, String bodyJson) throws IOException {
-		System.out.println("[Requesting] " + url);
-
-		Builder rb = new Request.Builder();
-		rb.url(url);
-		if (type == RequestType.POST) {
-			final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-			RequestBody body = RequestBody.create(JSON, bodyJson);
-			rb.post(body);
-		}
-		Request request = rb.build();
-
-		Response response = client.newCall(request).execute();
-
-		if (response.isSuccessful()) {
-			String answer = response.body().string();
-			// System.out.println("[Response (" + response.code() + ")] " + answer);
-			return answer;
-		} else {
-			System.out.println(response.body().string());
-			throw new RuntimeException("Call failed. (" + response.code() + ")");
-		}
-
-	}
-
-	private int responseCount(Response response) {
-		int result = 1;
-		while ((response = response.priorResponse()) != null) {
-			result++;
-		}
-		return result;
-	}
 
 	private IssueStatus extractStatus(JsonObject issueJsonObject) {
 		IssueStatus status;
@@ -164,5 +135,58 @@ public class WebApi {
 			throw new RuntimeException("Unexpected status >" + statusText + "<.");
 		}
 		return status;
+	}
+
+	private static OkHttpClient createClient(ConfigCache configCache) {
+		// See: https://stackoverflow.com/a/34819354/3298787
+		OkHttpClient.Builder builder = new OkHttpClient.Builder();
+		builder.authenticator(new Authenticator() {
+
+			@Override
+			public Request authenticate(Route route, Response response) throws IOException {
+				if (responseCount(response) >= 3) {
+					System.out.println("DEBUG: Giving up on authentication.");
+					return null; // If we've failed 3 times, give up.
+				}
+				String credential = Credentials.basic(configCache.getUsername(), configCache.getPassword());
+				return response.request().newBuilder().header("Authorization", credential).build();
+			}
+		});
+
+		return builder.build();
+	}
+
+	private static int responseCount(Response response) {
+		int result = 1;
+		while ((response = response.priorResponse()) != null) {
+			result++;
+		}
+		return result;
+	}
+
+	private static String makeRequest(OkHttpClient client, RequestType type, String url, String bodyJson)
+			throws IOException {
+		System.out.println("[Requesting] " + url);
+
+		Builder rb = new Request.Builder();
+		rb.url(url);
+		if (type == RequestType.POST) {
+			final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+			RequestBody body = RequestBody.create(JSON, bodyJson);
+			rb.post(body);
+		}
+		Request request = rb.build();
+
+		Response response = client.newCall(request).execute();
+
+		if (response.isSuccessful()) {
+			String answer = response.body().string();
+			// System.out.println("[Response (" + response.code() + ")] " + answer);
+			return answer;
+		} else {
+			System.out.println(response.body().string());
+			throw new WebServiceException("Call failed. (" + response.code() + ")");
+		}
+
 	}
 }

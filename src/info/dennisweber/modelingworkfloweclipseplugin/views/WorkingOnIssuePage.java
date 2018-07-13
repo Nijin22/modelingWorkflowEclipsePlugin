@@ -206,9 +206,16 @@ public class WorkingOnIssuePage {
 		Button backToOverviewButton = new Button(parent, SWT.NONE);
 		backToOverviewButton.setText("Back to Overview");
 		backToOverviewButton.addListener(SWT.Selection, event -> {
-			// TODO: What to do with uncommited changes? Stash? Commit as a "WIP"?
-			gitInterface.checkout("master");
-			mainView.showMasterPage();
+			if (gitInterface.getNotIndexedFiles().isEmpty() && gitInterface.getIndexedFiles().isEmpty()) {
+				gitInterface.checkout("master");
+				mainView.showMasterPage();
+			} else {
+				MessageDialog.openWarning(shell, "Uncommited changes",
+						"You have some uncommited changes. To prevent you from accidentally"
+								+ " loosing them, you need to either commit them or explicitly"
+								+ " remove them by resetting to a previous version.");
+			}
+
 		});
 	}
 

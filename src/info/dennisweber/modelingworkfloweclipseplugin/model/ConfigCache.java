@@ -47,6 +47,8 @@ public class ConfigCache {
 		dto.username = username;
 		dto.password = password;
 
+		// Check validity of bitbucket
+		
 		isConfigured = true;
 	}
 

@@ -19,16 +19,16 @@ import org.eclipse.swt.widgets.Shell;
 
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
-import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
+import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 	private Shell parentShell;
 	private GitInterface gitInterface;
-	private JiraRestApi jiraApi;
+	private WebApi jiraApi;
 	private Issue issue;
 	private Set<Button> branchButtons = new HashSet<Button>();
 
-	public StartWorkingOnIssueDialog(Shell parentShell, Issue issue, GitInterface gitInterface, JiraRestApi jiraApi) {
+	public StartWorkingOnIssueDialog(Shell parentShell, Issue issue, GitInterface gitInterface, WebApi jiraApi) {
 		super(parentShell);
 		this.parentShell = parentShell;
 		this.issue = issue;

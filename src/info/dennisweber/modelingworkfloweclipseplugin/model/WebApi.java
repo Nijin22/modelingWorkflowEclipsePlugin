@@ -17,13 +17,13 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.Route;
 
-public class JiraRestApi {
+public class WebApi {
 	private OkHttpClient client;
 	private ConfigCache configCache;
 
 	private int activeSprintCached = -1;
 
-	public JiraRestApi(ConfigCache configCache) {
+	public WebApi(ConfigCache configCache) {
 		this.configCache = configCache;
 
 		// Use authentication

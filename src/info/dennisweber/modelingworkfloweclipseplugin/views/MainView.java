@@ -19,11 +19,11 @@ import info.dennisweber.modelingworkfloweclipseplugin.dialogs.ConfigurationDialo
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
-import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
+import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class MainView extends ViewPart {
 	private ConfigCache configCache;
-	private JiraRestApi jiraApi;
+	private WebApi jiraApi;
 	private GitInterface gitInterface;
 	private IProject selectedProject = null;
 	private MasterPage masterPage;
@@ -122,7 +122,7 @@ public class MainView extends ViewPart {
 		}
 
 		// Initialize APIs
-		jiraApi = new JiraRestApi(configCache);
+		jiraApi = new WebApi(configCache);
 		gitInterface = new GitInterface(project);
 
 		// Detect if that project is on the "master" or a issue-branch and open

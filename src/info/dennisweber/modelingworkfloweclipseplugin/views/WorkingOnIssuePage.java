@@ -21,10 +21,10 @@ import info.dennisweber.modelingworkfloweclipseplugin.model.CommitDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
-import info.dennisweber.modelingworkfloweclipseplugin.model.JiraRestApi;
+import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class WorkingOnIssuePage {
-	private JiraRestApi jiraApi;
+	private WebApi jiraApi;
 	private GitInterface gitInterface;
 	private Shell shell;
 	private Composite parent;
@@ -41,7 +41,7 @@ public class WorkingOnIssuePage {
 	private final String buttonKey = "SWT-BUTTON"; // Used to keep track of created SWT Buttons for later disposal
 	private boolean indexContainsFiles;
 
-	public WorkingOnIssuePage(Composite originalParent, JiraRestApi jiraApi, ConfigCache configCache, Shell shell,
+	public WorkingOnIssuePage(Composite originalParent, WebApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView, Issue issue) {
 		this.jiraApi = jiraApi;
 		this.gitInterface = gitInterface;

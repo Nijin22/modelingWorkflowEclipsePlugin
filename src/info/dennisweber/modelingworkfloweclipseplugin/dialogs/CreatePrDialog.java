@@ -96,6 +96,7 @@ public class CreatePrDialog extends TitleAreaDialog {
 		Button issueStatusBtnNo = new Button(issueStatusGroup, SWT.RADIO);
 		issueStatusBtnNo.setText("No, just create the PR but keep the issue 'in progress'.");
 		issueStatusBtnNo.setData(false);
+		issueStatusBtnNo.setSelection(true); // Default choice
 
 		// Changed ressources:
 		new Label(container, SWT.NONE).setText("Changed Ressources in this PR");

@@ -1,5 +1,6 @@
 package info.dennisweber.modelingworkfloweclipseplugin.dialogs;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,20 +25,23 @@ import org.eclipse.swt.widgets.TableItem;
 
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
+import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class CreatePrDialog extends TitleAreaDialog {
 	private Shell shell;
 	private Issue issue;
 	private GitInterface gitInterface;
+	private WebApi webApi;
 
 	private Set<Button> branchButtons = new HashSet<Button>();
 	private Table changesTable;
 
-	public CreatePrDialog(Shell parentShell, Issue issue, GitInterface gitInterface) {
+	public CreatePrDialog(Shell parentShell, Issue issue, GitInterface gitInterface, WebApi webApi) {
 		super(parentShell);
 		this.shell = parentShell;
 		this.issue = issue;
 		this.gitInterface = gitInterface;
+		this.webApi = webApi;
 	}
 
 	@Override
@@ -98,8 +102,8 @@ public class CreatePrDialog extends TitleAreaDialog {
 		issueStatusBtnNo.setData(false);
 		issueStatusBtnNo.setSelection(true); // Default choice
 
-		// Changed ressources:
-		new Label(container, SWT.NONE).setText("Changed Ressources in this PR");
+		// Changed resources:
+		new Label(container, SWT.NONE).setText("Changed Resources in this PR");
 		changesTable = new Table(container, SWT.BORDER);
 		changesTable.setLinesVisible(true);
 		changesTable.setHeaderVisible(true);
@@ -114,7 +118,12 @@ public class CreatePrDialog extends TitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		// TODO: Create PR
+		// Create PR:
+		try {
+			webApi.createPr(gitInterface.getCurrentBranch(), getSelectedBranch());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 
 		// TODO: Set the issue to "In review" if that's the case
 		super.okPressed();

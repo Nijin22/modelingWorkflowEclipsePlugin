@@ -113,6 +113,16 @@ public class WebApi {
 		makeRequest(client, RequestType.POST, url, json);
 	}
 
+	public void createPr(String sourceBranch, String targetBranch) throws IOException {
+		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests";
+		String title = "Merge >" + sourceBranch + "< into >" + targetBranch + "<.";
+		String desc = "This PR was automatically created by Dennis' modelling workflow prototype.";
+		String json = "{\"title\":\"" + title + "\"," + "\"description\":\"" + desc + "\","
+				+ "\"state\":\"OPEN\",\"open\":true,\"closed\":false," + "\"fromRef\":{\"id\":\"refs/heads/"
+				+ sourceBranch + "\"}," + "\"toRef\":{\"id\":\"refs/heads/" + targetBranch + "\"}}";
+		makeRequest(client, RequestType.POST, url, json);
+	}
+
 	private enum RequestType {
 		GET, POST
 	};

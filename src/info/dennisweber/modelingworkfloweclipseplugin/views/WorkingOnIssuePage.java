@@ -26,7 +26,7 @@ import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class WorkingOnIssuePage {
-	private WebApi jiraApi;
+	private WebApi webApi;
 	private GitInterface gitInterface;
 	private Shell shell;
 	private Composite parent;
@@ -45,7 +45,7 @@ public class WorkingOnIssuePage {
 
 	public WorkingOnIssuePage(Composite originalParent, WebApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView, Issue issue) {
-		this.jiraApi = jiraApi;
+		this.webApi = jiraApi;
 		this.gitInterface = gitInterface;
 		this.shell = shell;
 		this.configCache = configCache;
@@ -199,7 +199,7 @@ public class WorkingOnIssuePage {
 		Button createPrButton = new Button(changesLogGroup, SWT.NONE);
 		createPrButton.setText("Create Pull Request");
 		createPrButton.addListener(SWT.Selection, event -> {
-			CreatePrDialog dialog = new CreatePrDialog(shell, issue, gitInterface);
+			CreatePrDialog dialog = new CreatePrDialog(shell, issue, gitInterface, webApi);
 			dialog.create();
 			if (dialog.open() == Window.OK) {
 				// User clicked on "OK"

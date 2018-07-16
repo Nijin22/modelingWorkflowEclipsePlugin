@@ -1,6 +1,7 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.layout.GridData;
@@ -17,6 +18,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
+import info.dennisweber.modelingworkfloweclipseplugin.dialogs.CreatePrDialog;
 import info.dennisweber.modelingworkfloweclipseplugin.model.CommitDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
@@ -197,7 +199,13 @@ public class WorkingOnIssuePage {
 		Button createPrButton = new Button(changesLogGroup, SWT.NONE);
 		createPrButton.setText("Create Pull Request");
 		createPrButton.addListener(SWT.Selection, event -> {
-			Program.launch(configCache.getBbBaseUrl() + configCache.getBbRepoPath() + "pull-requests?create");
+			CreatePrDialog dialog = new CreatePrDialog(shell, issue, gitInterface);
+			dialog.create();
+			if (dialog.open() == Window.OK) {
+				// User clicked on "OK"
+				
+				// TODO: Show PR
+			}
 		});
 
 	}

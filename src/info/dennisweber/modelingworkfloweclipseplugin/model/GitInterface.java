@@ -182,6 +182,15 @@ public class GitInterface {
 		}
 	}
 
+	public List<String> getChangedFilesBetweenTwoBranches(String baseBranch, String secondBranch) {
+		try {
+			String cmd = "diff --name-only " + baseBranch + ".." + secondBranch;
+			return executeGitCommand(cmd);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private List<String> executeGitCommand(String command) throws InterruptedException, IOException {
 		List<String> results = new LinkedList<String>();
 

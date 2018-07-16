@@ -196,6 +196,7 @@ public class WorkingOnIssuePage {
 		}
 
 		// Create PR Button
+		// TODO: Check if there already is a PR, and go to the PR directly if it is.
 		Button createPrButton = new Button(changesLogGroup, SWT.NONE);
 		createPrButton.setText("Create Pull Request");
 		createPrButton.addListener(SWT.Selection, event -> {

@@ -108,9 +108,11 @@ public class WebApi {
 	}
 
 	public void moveIssueInProgress(String issueId) throws IOException {
-		String url = configCache.getJiraUrl() + "/rest/api/2/issue/" + issueId + "/transitions";
-		String json = "{\"transition\":{\"id\":\"4\"}}"; // "Transition it via 4 (Open --> In Progress)
-		makeRequest(client, RequestType.POST, url, json);
+		performIssueTransition(issueId, 4); // Transition it via 4 (Open --> In Progress)
+	}
+
+	public void moveIssueInReview(String issueId) throws IOException {
+		performIssueTransition(issueId, 731); // Transition it via 731 (--> To be reviewed)
 	}
 
 	public void createPr(String sourceBranch, String targetBranch) throws IOException {
@@ -198,5 +200,11 @@ public class WebApi {
 			throw new WebServiceException("Call failed. (" + response.code() + ")");
 		}
 
+	}
+
+	private void performIssueTransition(String issueId, Integer transitionId) throws IOException {
+		String url = configCache.getJiraUrl() + "/rest/api/2/issue/" + issueId + "/transitions";
+		String json = "{\"transition\":{\"id\":\"" + transitionId + "\"}}";
+		makeRequest(client, RequestType.POST, url, json);
 	}
 }

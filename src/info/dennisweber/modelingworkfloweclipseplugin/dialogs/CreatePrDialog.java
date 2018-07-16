@@ -7,7 +7,6 @@ import java.util.Set;
 
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -35,6 +34,7 @@ public class CreatePrDialog extends TitleAreaDialog {
 
 	private Set<Button> branchButtons = new HashSet<Button>();
 	private Table changesTable;
+	private Button issueStatusBtnYes;
 
 	public CreatePrDialog(Shell parentShell, Issue issue, GitInterface gitInterface, WebApi webApi) {
 		super(parentShell);
@@ -94,12 +94,10 @@ public class CreatePrDialog extends TitleAreaDialog {
 		Group issueStatusGroup = new Group(container, SWT.NONE);
 		issueStatusGroup.setLayout(new RowLayout(SWT.VERTICAL));
 		issueStatusGroup.setText("Set issue to 'in review'?");
-		Button issueStatusBtnYes = new Button(issueStatusGroup, SWT.RADIO);
+		issueStatusBtnYes = new Button(issueStatusGroup, SWT.RADIO);
 		issueStatusBtnYes.setText("Yes, let someone review this PR.");
-		issueStatusBtnYes.setData(true);
 		Button issueStatusBtnNo = new Button(issueStatusGroup, SWT.RADIO);
 		issueStatusBtnNo.setText("No, just create the PR but keep the issue 'in progress'.");
-		issueStatusBtnNo.setData(false);
 		issueStatusBtnNo.setSelection(true); // Default choice
 
 		// Changed resources:
@@ -124,8 +122,17 @@ public class CreatePrDialog extends TitleAreaDialog {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+		System.out.println("PR created.");
 
-		// TODO: Set the issue to "In review" if that's the case
+		// Set the issue to "In review" if that's what the user selected.
+		if (issueStatusBtnYes.getSelection()) {
+			// User selected that someone should review this issue.
+			try {
+				webApi.moveIssueInReview(issue.getId());
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 		super.okPressed();
 	}
 

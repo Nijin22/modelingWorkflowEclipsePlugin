@@ -1,5 +1,8 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -23,6 +26,7 @@ import info.dennisweber.modelingworkfloweclipseplugin.model.CommitDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
+import info.dennisweber.modelingworkfloweclipseplugin.model.PrDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class WorkingOnIssuePage extends SubPage {
@@ -182,19 +186,31 @@ public class WorkingOnIssuePage extends SubPage {
 			logTable.getColumn(i).pack();
 		}
 
-		// Create PR Button
-		// TODO: Check if there already is a PR, and go to the PR directly if it is.
-		Button createPrButton = new Button(changesLogGroup, SWT.NONE);
-		createPrButton.setText("Create Pull Request");
-		createPrButton.addListener(SWT.Selection, event -> {
-			CreatePrDialog dialog = new CreatePrDialog(shell, issue, gitInterface, webApi);
-			dialog.create();
-			if (dialog.open() == Window.OK) {
-				// User clicked on "OK"
-
-				// TODO: Show PR
+		try {
+			List<PrDto> prs = webApi.findPr("issue/" + issue.getId());
+			if (prs.isEmpty()) {
+				// Create PR Button
+				Button createPrButton = new Button(changesLogGroup, SWT.NONE);
+				createPrButton.setText("Create Pull Request");
+				createPrButton.addListener(SWT.Selection, event -> {
+					CreatePrDialog dialog = new CreatePrDialog(shell, issue, gitInterface, webApi);
+					dialog.create();
+					if (dialog.open() == Window.OK) {
+						// User clicked on "OK"
+						mainView.showPrPage(issue, dialog.getCreatedPr());
+					}
+				});
+			} else {
+				// There already is a PR!
+				Button viewPrButton = new Button(changesLogGroup, SWT.NONE);
+				viewPrButton.setText("View Pull Request");
+				viewPrButton.addListener(SWT.Selection, e -> {
+					mainView.showPrPage(issue, prs.get(0));
+				});
 			}
-		});
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 
 	}
 

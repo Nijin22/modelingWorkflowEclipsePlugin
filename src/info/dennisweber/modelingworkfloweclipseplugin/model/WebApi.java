@@ -119,7 +119,7 @@ public class WebApi {
 
 	public PrDto createPr(String sourceBranch, String targetBranch) throws IOException {
 		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests";
-		
+
 		PrDto pr = new PrDto();
 		pr.title = "Merge >" + sourceBranch + "< into >" + targetBranch + "<.";
 		pr.description = "This PR was automatically created by Dennis' modelling workflow prototype.";
@@ -130,12 +130,32 @@ public class WebApi {
 		pr.fromRef.id = "refs/heads/" + sourceBranch;
 		pr.toRef = new Reference();
 		pr.toRef.id = "refs/heads/" + targetBranch;
-		
+
 		String json = gson.toJson(pr, PrDto.class);
 		String answer = makeRequest(client, RequestType.POST, url, json);
-		
+
 		PrDto returned = gson.fromJson(answer, PrDto.class);
 		return returned;
+	}
+
+	public List<PrDto> findPr(String sourceBranch) throws IOException {
+		List<PrDto> foundPrs = new LinkedList<PrDto>();
+		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath()
+				+ "/pull-requests?limit=999999";
+		String json = makeRequest(client, RequestType.GET, url, "");
+		JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
+		
+		// Itearate PRs
+		jsonObj.get("values").getAsJsonArray().forEach(rawPr -> {
+			PrDto pr = gson.fromJson(rawPr, PrDto.class);
+			if (pr.open && pr.fromRef.displayId.equals(sourceBranch)) {
+				// Open PR from sourceBranch
+				foundPrs.add(pr);
+			}
+		});
+		
+		
+		return foundPrs;
 	}
 
 	private enum RequestType {

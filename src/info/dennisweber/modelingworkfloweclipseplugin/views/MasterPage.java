@@ -165,6 +165,7 @@ public class MasterPage extends SubPage {
 						editor.horizontalAlignment = SWT.LEFT;
 						editor.setEditor(button, item, 4);
 					}
+					// TODO: InReview issues should have a "view PR button"
 				}
 
 				// Adjust the width of columns

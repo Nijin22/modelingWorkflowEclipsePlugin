@@ -19,6 +19,7 @@ import info.dennisweber.modelingworkfloweclipseplugin.dialogs.ConfigurationDialo
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
+import info.dennisweber.modelingworkfloweclipseplugin.model.PrDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class MainView extends ViewPart {
@@ -28,6 +29,7 @@ public class MainView extends ViewPart {
 	private IProject selectedProject = null;
 	private MasterPage masterPage;
 	private WorkingOnIssuePage workingOnIssuePage;
+	private PrPage prPage;
 	private Shell shell;
 	private Composite parent;
 
@@ -51,7 +53,6 @@ public class MainView extends ViewPart {
 	public void showMasterPage() {
 		closeAllPages();
 
-		// Open master page
 		masterPage = new MasterPage(parent, jiraApi, configCache, shell, gitInterface, this);
 		parent.layout(false);
 	}
@@ -60,7 +61,13 @@ public class MainView extends ViewPart {
 		closeAllPages();
 
 		workingOnIssuePage = new WorkingOnIssuePage(parent, jiraApi, configCache, shell, gitInterface, this, issue);
-		
+		parent.layout(false);
+	}
+
+	public void showPrPage(Issue issue, PrDto pr) {
+		closeAllPages();
+
+		prPage = new PrPage(parent, jiraApi, configCache, shell, gitInterface, this, issue, pr);
 		parent.layout(false);
 	}
 
@@ -72,6 +79,10 @@ public class MainView extends ViewPart {
 		if (workingOnIssuePage != null) {
 			workingOnIssuePage.dispose();
 			workingOnIssuePage = null;
+		}
+		if (prPage != null) {
+			prPage.dispose();
+			prPage = null;
 		}
 	}
 

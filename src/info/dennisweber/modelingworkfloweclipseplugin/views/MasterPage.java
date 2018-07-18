@@ -30,35 +30,16 @@ import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
 import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
-public class MasterPage {
-	private WebApi jiraApi;
-	private GitInterface gitInterface;
-	private Shell shell;
-	private Composite parent;
-	private ConfigCache configCache;
-	private MainView mainView;
+public class MasterPage extends SubPage {
 
 	private Group releaseBranchesGroup;
 	private Table issueTable;
 	private Set<Button> issueTableButtons = new HashSet<Button>();
-	private Button issueRefreshButton;
-	private Link issueLink;
-	private Link viewAllIssuesLink;
-
 	private Group issueGroup;
-	private Table releaseBranchesTable;
-	private Button createNewReleaseBranchButton;
-	private Button buildReleaseFromMasterButton;
-
-	private Button configButton;
 
 	public MasterPage(Composite originalParent, WebApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView) {
-		this.jiraApi = jiraApi;
-		this.gitInterface = gitInterface;
-		this.shell = shell;
-		this.configCache = configCache;
-		this.mainView = mainView;
+		super(originalParent, jiraApi, configCache, shell, gitInterface, mainView);
 
 		// Layout this Page
 		this.parent = new Composite(originalParent, SWT.NONE);
@@ -69,19 +50,18 @@ public class MasterPage {
 
 		// Issues:
 		issueGroup = initIssueGroup(parent);
-		issueRefreshButton = initIssueRefreshButton(issueGroup);
+		initIssueRefreshButton(issueGroup);
 		issueTable = initIssueTable(issueGroup);
-		issueLink = initCreateIssueLink(issueGroup);
-		viewAllIssuesLink = initViewAllIssuesLink(issueGroup);
+		initCreateIssueLink(issueGroup);
+		initViewAllIssuesLink(issueGroup);
 
 		// Releases:
 		releaseBranchesGroup = initReleaseBranchesGroup(parent);
-		releaseBranchesTable = initReleaseBranchesTable(releaseBranchesGroup);
-		createNewReleaseBranchButton = initCreateNewReleaseBranchButton(releaseBranchesGroup);
-		buildReleaseFromMasterButton = initBuildReleaseFromMasterButton(releaseBranchesGroup);
+		initReleaseBranchesTable(releaseBranchesGroup);
+		initCreateNewReleaseBranchButton(releaseBranchesGroup);
+		initBuildReleaseFromMasterButton(releaseBranchesGroup);
 
-		// Config Button:
-		configButton = initConfigButton(parent);
+		initConfigButton(parent);
 	}
 
 	public void dispose() {
@@ -127,7 +107,7 @@ public class MasterPage {
 
 	private void fillTable(Table issueTable) {
 		try {
-			List<Issue> issues = jiraApi.getIssues();
+			List<Issue> issues = webApi.getIssues();
 
 			// Draw the update
 			Display.getDefault().syncExec(() -> {
@@ -156,7 +136,7 @@ public class MasterPage {
 						button.setText("Start working on issue");
 						button.addListener(SWT.Selection, event -> {
 							StartWorkingOnIssueDialog dialog = new StartWorkingOnIssueDialog(shell, issue, gitInterface,
-									jiraApi);
+									webApi);
 							dialog.create();
 							switch (dialog.open()) {// Open dialog and block until it is closed again
 							case Window.OK:
@@ -281,7 +261,8 @@ public class MasterPage {
 		Button button = new Button(parent, SWT.PUSH);
 		button.setText("Create new active release branch");
 		button.addListener(SWT.Selection, event -> {
-			MessageDialog.openError(shell, "Feature not in prototype", "This feature is not available in the prototype");
+			MessageDialog.openError(shell, "Feature not in prototype",
+					"This feature is not available in the prototype");
 		});
 
 		return button;
@@ -291,7 +272,8 @@ public class MasterPage {
 		Button button = new Button(parent, SWT.PUSH);
 		button.setText("Build release from master");
 		button.addListener(SWT.Selection, event -> {
-			MessageDialog.openError(shell, "Feature not in prototype", "This feature is not available in the prototype");
+			MessageDialog.openError(shell, "Feature not in prototype",
+					"This feature is not available in the prototype");
 		});
 
 		return button;

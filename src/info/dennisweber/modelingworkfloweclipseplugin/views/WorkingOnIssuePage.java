@@ -25,13 +25,7 @@ import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
-public class WorkingOnIssuePage {
-	private WebApi webApi;
-	private GitInterface gitInterface;
-	private Shell shell;
-	private Composite parent;
-	private ConfigCache configCache;
-	private MainView mainView;
+public class WorkingOnIssuePage extends SubPage {
 	private Issue issue;
 
 	private Text commitMessageTextbox;
@@ -45,11 +39,8 @@ public class WorkingOnIssuePage {
 
 	public WorkingOnIssuePage(Composite originalParent, WebApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView, Issue issue) {
-		this.webApi = jiraApi;
-		this.gitInterface = gitInterface;
-		this.shell = shell;
-		this.configCache = configCache;
-		this.mainView = mainView;
+
+		super(originalParent, jiraApi, configCache, shell, gitInterface, mainView);
 		this.issue = issue;
 
 		// Layout this Page
@@ -204,7 +195,7 @@ public class WorkingOnIssuePage {
 			dialog.create();
 			if (dialog.open() == Window.OK) {
 				// User clicked on "OK"
-				
+
 				// TODO: Show PR
 			}
 		});

@@ -223,7 +223,16 @@ public class GitInterface {
 
 		System.out.println("[GIT Input:] " + cmd);
 		Process p = Runtime.getRuntime().exec(cmd);
-		p.waitFor();
+		int exitCode = p.waitFor(); // Block until command is done.
+		if (exitCode != 0) {
+			// Bad exit code.
+			BufferedReader r = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+			String line;
+			while ((line = r.readLine()) != null) {
+				System.err.println("[GIT ERR:] " + line);
+			}
+			throw new RuntimeException("Git command failed with exit code " + exitCode);
+		}
 		BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		String line;
 		while ((line = r.readLine()) != null) {

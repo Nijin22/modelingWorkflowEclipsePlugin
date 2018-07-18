@@ -74,10 +74,19 @@ public class PrPage extends SubPage {
 
 	private void initConflictLabels() {
 		Label lbl = new Label(parent, SWT.None);
-		lbl.setText("Display of conflicts not available in prototype.");
-		lbl.setForeground(shell.getDisplay().getSystemColor(SWT.COLOR_RED));
-		// Would require a separate, paid addon. See
-		// https://community.atlassian.com/t5/Bitbucket-questions/REST-API-how-to-check-if-a-PR-has-conflict-s/qaq-p/716529
+		try {
+			if (webApi.canMergePr(pr.id)) {
+				lbl.setText("Can be merged.");
+				lbl.setForeground(shell.getDisplay().getSystemColor(SWT.COLOR_DARK_GREEN));
+			} else {
+				lbl.setText("Conflicts with base branch! Fix the conflicts in " + pr.toRef.displayId
+						+ " to be able to merge.");
+				lbl.setForeground(shell.getDisplay().getSystemColor(SWT.COLOR_RED));
+			}
+		} catch (IOException e) {
+			lbl.setText("Failed to receive Merge-Status from Bitbucket.");
+		}
+
 	}
 
 	private void initCancelButton() {

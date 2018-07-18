@@ -116,11 +116,10 @@ public class WebApi {
 	public void moveIssueInReview(String issueId) throws IOException {
 		performIssueTransition(issueId, 731); // Transition it via 731 (--> To be reviewed)
 	}
-	
+
 	public void moveIssueReopen(String issueId) throws IOException {
 		performIssueTransition(issueId, 741); // Transition it via 741 (--> To reopend)
 	}
-	
 
 	public PrDto createPr(String sourceBranch, String targetBranch) throws IOException {
 		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests";
@@ -149,7 +148,7 @@ public class WebApi {
 				+ "/pull-requests?limit=999999";
 		String json = makeRequest(client, RequestType.GET, url, "");
 		JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
-		
+
 		// Itearate PRs
 		jsonObj.get("values").getAsJsonArray().forEach(rawPr -> {
 			PrDto pr = gson.fromJson(rawPr, PrDto.class);
@@ -158,9 +157,17 @@ public class WebApi {
 				foundPrs.add(pr);
 			}
 		});
-		
-		
+
 		return foundPrs;
+	}
+
+	public boolean canMergePr(int id) throws IOException {
+		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests/"
+				+ id + "/merge";
+		String json = makeRequest(client, RequestType.GET, url, "");
+		JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
+
+		return jsonObj.get("canMerge").getAsBoolean();
 	}
 
 	private enum RequestType {

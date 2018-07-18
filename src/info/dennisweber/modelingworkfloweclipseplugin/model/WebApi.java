@@ -116,6 +116,11 @@ public class WebApi {
 	public void moveIssueInReview(String issueId) throws IOException {
 		performIssueTransition(issueId, 731); // Transition it via 731 (--> To be reviewed)
 	}
+	
+	public void moveIssueReopen(String issueId) throws IOException {
+		performIssueTransition(issueId, 741); // Transition it via 741 (--> To reopend)
+	}
+	
 
 	public PrDto createPr(String sourceBranch, String targetBranch) throws IOException {
 		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests";

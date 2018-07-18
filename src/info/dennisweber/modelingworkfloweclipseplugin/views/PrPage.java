@@ -1,9 +1,17 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
+import java.io.IOException;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.program.Program;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
@@ -33,13 +41,61 @@ public class PrPage extends SubPage {
 		parent.setLayout(mainLayout);
 
 		initTopLabels();
+		initIssueStatusRadioButtons();
+	}
+
+	private void initIssueStatusRadioButtons() {
+		Group issueStatusGroup = new Group(parent, SWT.NONE);
+		issueStatusGroup.setLayout(new RowLayout(SWT.VERTICAL));
+		issueStatusGroup.setText("Status of issue [" + issue.getId() + "] " + issue.getTitle());
+		Button issueStatusBtnInReview = new Button(issueStatusGroup, SWT.RADIO);
+		issueStatusBtnInReview.setText("In Review");
+		Button issueStatusBtnInProgress = new Button(issueStatusGroup, SWT.RADIO);
+		issueStatusBtnInProgress.setText("In Progress");
+
+		SelectionListener selectionListener = new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				try {
+					if (issueStatusBtnInProgress.getSelection()) {
+						// User switched to "In Progress"
+						webApi.moveIssueReopen(issue.getId());
+						webApi.moveIssueInProgress(issue.getId());
+					} else {
+						// User switched to "In Review"
+						webApi.moveIssueInReview(issue.getId());
+					}
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+			};
+		};
+		issueStatusBtnInProgress.addSelectionListener(selectionListener);
+
+		// Set default value
+		switch (issue.getStatus()) {
+		case InProgress:
+			issueStatusBtnInProgress.setSelection(true);
+			break;
+		case InReview:
+			issueStatusBtnInReview.setSelection(true);
+			break;
+		default:
+			throw new RuntimeException("Issue " + issue.getId() + " is in status " + issue.getStatus()
+					+ ". This should not happen when viewing the Pull Request");
+		}
 	}
 
 	private void initTopLabels() {
-		Link first = new Link(parent, SWT.NONE);
-		first.setText("Viewing Pull Request <a>" + pr.id + "</a> to merge changes from ");
-		new Label(parent, SWT.NONE).setText(pr.fromRef.displayId);
-		new Label(parent, SWT.NONE).setText("into");
-		new Label(parent, SWT.NONE).setText(pr.toRef.displayId);
+		Link link = new Link(parent, SWT.NONE);
+		link.setText("Viewing Pull Request <a>[" + pr.id + "]</a> to merge changes from <a>" + pr.fromRef.displayId
+				+ "</a> into <a>" + pr.toRef.displayId + "</a>");
+		link.addListener(SWT.Selection, event -> {
+			Program.launch(configCache.getBbBaseUrl() + configCache.getBbRepoPath() + "/pull-requests/" + pr.id);
+		});
 	}
 }

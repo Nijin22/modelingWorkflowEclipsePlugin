@@ -45,21 +45,30 @@ public class PrPage extends SubPage {
 		mainLayout.numColumns = 1;
 		parent.setLayout(mainLayout);
 
+		boolean canBeMerged = false;
+		try {
+			canBeMerged = webApi.canMergePr(pr.id);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 		initTopLabels();
 		initIssueStatusRadioButtons();
 		initChangedRessources();
-		initConflictLabels();
-		initAcceptButton();
+		initConflictLabels(canBeMerged);
+		initAcceptButton(canBeMerged);
 		initDeclineButton();
 		initCancelButton();
 	}
 
-	private void initAcceptButton() {
+	private void initAcceptButton(boolean canBeMerged) {
 		Button btn = new Button(parent, SWT.NONE);
 		btn.setText("Accept pull request and merge changes");
 		btn.addListener(SWT.Selection, e -> {
 			// TODO: Implement acceptance of PR
 		});
+		if (!canBeMerged) {
+			btn.setEnabled(false);
+		}
 	}
 
 	private void initDeclineButton() {
@@ -72,19 +81,15 @@ public class PrPage extends SubPage {
 
 	}
 
-	private void initConflictLabels() {
+	private void initConflictLabels(boolean canBeMerged) {
 		Label lbl = new Label(parent, SWT.None);
-		try {
-			if (webApi.canMergePr(pr.id)) {
-				lbl.setText("Can be merged.");
-				lbl.setForeground(shell.getDisplay().getSystemColor(SWT.COLOR_DARK_GREEN));
-			} else {
-				lbl.setText("Conflicts with base branch! Fix the conflicts in " + pr.toRef.displayId
-						+ " to be able to merge.");
-				lbl.setForeground(shell.getDisplay().getSystemColor(SWT.COLOR_RED));
-			}
-		} catch (IOException e) {
-			lbl.setText("Failed to receive Merge-Status from Bitbucket.");
+		if (canBeMerged) {
+			lbl.setText("Can be merged.");
+			lbl.setForeground(shell.getDisplay().getSystemColor(SWT.COLOR_DARK_GREEN));
+		} else {
+			lbl.setText(
+					"Conflicts with base branch! Fix the conflicts in " + pr.toRef.displayId + " to be able to merge.");
+			lbl.setForeground(shell.getDisplay().getSystemColor(SWT.COLOR_RED));
 		}
 
 	}

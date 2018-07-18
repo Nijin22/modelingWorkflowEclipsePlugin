@@ -3,6 +3,7 @@ package info.dennisweber.modelingworkfloweclipseplugin.views;
 import java.io.IOException;
 import java.util.List;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -48,14 +49,34 @@ public class PrPage extends SubPage {
 		initIssueStatusRadioButtons();
 		initChangedRessources();
 		initConflictLabels();
+		initAcceptButton();
+		initDeclineButton();
 		initCancelButton();
+	}
+
+	private void initAcceptButton() {
+		Button btn = new Button(parent, SWT.NONE);
+		btn.setText("Accept pull request and merge changes");
+		btn.addListener(SWT.Selection, e -> {
+			// TODO: Implement acceptance of PR
+		});
+	}
+
+	private void initDeclineButton() {
+		Button btn = new Button(parent, SWT.NONE);
+		btn.setText("Decline pull request");
+		btn.addListener(SWT.Selection, e -> {
+			MessageDialog.openError(shell, "Not impelemtend in protype",
+					"This featuer is not available in the prototype. It can still be done via the Bitbucket Web UI");
+		});
+
 	}
 
 	private void initConflictLabels() {
 		Label lbl = new Label(parent, SWT.None);
 		lbl.setText("Display of conflicts not available in prototype.");
 		lbl.setForeground(shell.getDisplay().getSystemColor(SWT.COLOR_RED));
-		// Would require a seperate, paid addon. See
+		// Would require a separate, paid addon. See
 		// https://community.atlassian.com/t5/Bitbucket-questions/REST-API-how-to-check-if-a-PR-has-conflict-s/qaq-p/716529
 	}
 

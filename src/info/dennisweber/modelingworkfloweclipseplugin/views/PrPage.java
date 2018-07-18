@@ -1,6 +1,7 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -15,6 +16,9 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
@@ -42,6 +46,38 @@ public class PrPage extends SubPage {
 
 		initTopLabels();
 		initIssueStatusRadioButtons();
+		initChangedRessources();
+		initCancelButton();
+	}
+
+	private void initCancelButton() {
+		Button btn = new Button(parent, SWT.NONE);
+		btn.setText("Cancel");
+		btn.addListener(SWT.Selection, e -> {
+			gitInterface.checkout("master");
+			mainView.showMasterPage();
+		});
+	}
+
+	private void initChangedRessources() {
+		// Changed resources:
+		new Label(parent, SWT.NONE).setText("Changed Resources in this PR:");
+		Table changesTable = new Table(parent, SWT.BORDER);
+		changesTable.setLinesVisible(true);
+		changesTable.setHeaderVisible(true);
+		changesTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		new TableColumn(changesTable, SWT.NONE).setText("Ressource");
+		changesTable.getColumn(0).pack();
+
+		String thisBranch = pr.fromRef.displayId;
+		String mergeOntoBranch = pr.toRef.displayId;
+		List<String> changedFiles = gitInterface.getChangedFilesBetweenTwoBranches(mergeOntoBranch, thisBranch);
+		for (String fileName : changedFiles) {
+			TableItem item = new TableItem(changesTable, SWT.NONE);
+			item.setText(0, fileName);
+		}
+		changesTable.getColumn(0).pack();
+
 	}
 
 	private void initIssueStatusRadioButtons() {

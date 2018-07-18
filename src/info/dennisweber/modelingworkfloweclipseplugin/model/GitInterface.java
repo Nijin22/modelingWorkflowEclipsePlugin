@@ -51,6 +51,7 @@ public class GitInterface {
 
 	public void checkout(String branchName) {
 		try {
+			// TODO: Pull!
 			fetch();
 			
 			if (doesBranchExist(branchName)) {

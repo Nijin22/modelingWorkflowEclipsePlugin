@@ -47,7 +47,16 @@ public class PrPage extends SubPage {
 		initTopLabels();
 		initIssueStatusRadioButtons();
 		initChangedRessources();
+		initConflictLabels();
 		initCancelButton();
+	}
+
+	private void initConflictLabels() {
+		Label lbl = new Label(parent, SWT.None);
+		lbl.setText("Display of conflicts not available in prototype.");
+		lbl.setForeground(shell.getDisplay().getSystemColor(SWT.COLOR_RED));
+		// Would require a seperate, paid addon. See
+		// https://community.atlassian.com/t5/Bitbucket-questions/REST-API-how-to-check-if-a-PR-has-conflict-s/qaq-p/716529
 	}
 
 	private void initCancelButton() {

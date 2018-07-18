@@ -6,10 +6,12 @@ import java.util.List;
 
 import javax.xml.ws.WebServiceException;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import info.dennisweber.modelingworkfloweclipseplugin.model.PrDto.Reference;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.MediaType;
@@ -23,6 +25,7 @@ import okhttp3.Route;
 public class WebApi {
 	private OkHttpClient client;
 	private ConfigCache configCache;
+	private Gson gson = new Gson();
 
 	private int activeSprintCached = -1;
 
@@ -114,14 +117,25 @@ public class WebApi {
 		performIssueTransition(issueId, 731); // Transition it via 731 (--> To be reviewed)
 	}
 
-	public void createPr(String sourceBranch, String targetBranch) throws IOException {
+	public PrDto createPr(String sourceBranch, String targetBranch) throws IOException {
 		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests";
-		String title = "Merge >" + sourceBranch + "< into >" + targetBranch + "<.";
-		String desc = "This PR was automatically created by Dennis' modelling workflow prototype.";
-		String json = "{\"title\":\"" + title + "\"," + "\"description\":\"" + desc + "\","
-				+ "\"state\":\"OPEN\",\"open\":true,\"closed\":false," + "\"fromRef\":{\"id\":\"refs/heads/"
-				+ sourceBranch + "\"}," + "\"toRef\":{\"id\":\"refs/heads/" + targetBranch + "\"}}";
-		makeRequest(client, RequestType.POST, url, json);
+		
+		PrDto pr = new PrDto();
+		pr.title = "Merge >" + sourceBranch + "< into >" + targetBranch + "<.";
+		pr.description = "This PR was automatically created by Dennis' modelling workflow prototype.";
+		pr.state = "OPEN";
+		pr.open = true;
+		pr.closed = false;
+		pr.fromRef = new Reference();
+		pr.fromRef.id = "refs/heads/" + sourceBranch;
+		pr.toRef = new Reference();
+		pr.toRef.id = "refs/heads/" + targetBranch;
+		
+		String json = gson.toJson(pr, PrDto.class);
+		String answer = makeRequest(client, RequestType.POST, url, json);
+		
+		PrDto returned = gson.fromJson(answer, PrDto.class);
+		return returned;
 	}
 
 	private enum RequestType {

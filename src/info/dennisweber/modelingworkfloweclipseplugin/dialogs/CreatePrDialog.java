@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.TableItem;
 
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
+import info.dennisweber.modelingworkfloweclipseplugin.model.PrDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class CreatePrDialog extends TitleAreaDialog {
@@ -35,6 +36,7 @@ public class CreatePrDialog extends TitleAreaDialog {
 	private Set<Button> branchButtons = new HashSet<Button>();
 	private Table changesTable;
 	private Button issueStatusBtnYes;
+	private PrDto createdPr = null;
 
 	public CreatePrDialog(Shell parentShell, Issue issue, GitInterface gitInterface, WebApi webApi) {
 		super(parentShell);
@@ -49,6 +51,16 @@ public class CreatePrDialog extends TitleAreaDialog {
 		super.create();
 		setTitle("Creating a Pull Request for Issue " + " [" + issue.getId() + "] " + issue.getTitle());
 		// setMessage("MESSAGE HERE", IMessageProvider.NONE);
+	}
+
+	/**
+	 * Return the created Pull Request. Might be null if the dialog did not create a
+	 * PR.
+	 * 
+	 * @return The create PR.
+	 */
+	public PrDto getCreatedPr() {
+		return createdPr;
 	}
 
 	@Override
@@ -118,7 +130,7 @@ public class CreatePrDialog extends TitleAreaDialog {
 	protected void okPressed() {
 		// Create PR:
 		try {
-			webApi.createPr(gitInterface.getCurrentBranch(), getSelectedBranch());
+			createdPr = webApi.createPr(gitInterface.getCurrentBranch(), getSelectedBranch());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

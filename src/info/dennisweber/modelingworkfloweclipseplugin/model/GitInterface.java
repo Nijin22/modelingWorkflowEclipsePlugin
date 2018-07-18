@@ -51,7 +51,28 @@ public class GitInterface {
 
 	public void checkout(String branchName) {
 		try {
-			executeGitCommand("checkout " + branchName);
+			fetch();
+			
+			if (doesBranchExist(branchName)) {
+				executeGitCommand("checkout " + branchName);
+			} else {
+				executeGitCommand("checkout -b " + branchName);
+			}
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public boolean doesBranchExist(String branchName) {
+		try {
+			List<String> res = executeGitCommand("git show-ref refs/heads/" + branchName);
+			if (res.isEmpty()) {
+				// Nothing found
+				return false;
+			} else {
+				// Content would be the SHA of the branch
+				return true;
+			}
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
 		}

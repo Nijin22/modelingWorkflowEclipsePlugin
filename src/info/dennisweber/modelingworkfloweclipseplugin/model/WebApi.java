@@ -130,20 +130,35 @@ public class WebApi {
 
 	private IssueStatus extractStatus(JsonObject issueJsonObject) {
 		IssueStatus status;
-		String statusText = issueJsonObject.get("fields").getAsJsonObject().get("status").getAsJsonObject()
-				.get("statusCategory").getAsJsonObject().get("key").getAsString();
-		switch (statusText) {
-		case "new":
+		String statusId = issueJsonObject.get("fields").getAsJsonObject().get("status").getAsJsonObject().get("id")
+				.getAsString();
+		switch (statusId) {
+
+		case "1": // Jira calls it "Open"
+		case "4": // Jira calls it "Reopened"
+		case "10000": // Jira calls it "To Be Refined"
+		case "11000": // Jira calls it "To Do"
 			status = IssueStatus.ToDo;
 			break;
-		case "indeterminate":
+
+		case "3": // Jira calls it "In Progress"
 			status = IssueStatus.InProgress;
 			break;
-		case "done":
+
+		case "5": // Jira calls it "Resolved"
+		case "6": // Jira calls it "Closed"
+		case "10600": // Jira calls it "Done"
 			status = IssueStatus.Done;
 			break;
+
+		case "10001": // Jira calls it "To Be Reviewed"
+		case "10100": // Jira calls it "Test"
+		case "10900": // Jira calls it "In Review"
+			status = IssueStatus.InReview;
+			break;
+
 		default:
-			throw new RuntimeException("Unexpected status >" + statusText + "<.");
+			throw new RuntimeException("Unexpected status >" + statusId + "<.");
 		}
 		return status;
 	}

@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.xml.ws.WebServiceException;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -83,8 +84,7 @@ public class WebApi {
 
 			String id = issueJsonObject.get("key").getAsString();
 			String title = issueJsonObject.get("fields").getAsJsonObject().get("summary").getAsString();
-			String assignee = issueJsonObject.get("fields").getAsJsonObject().get("assignee").getAsJsonObject()
-					.get("displayName").getAsString();
+			String assignee = extractAssignee(issueJsonObject);
 			IssueStatus status = extractStatus(issueJsonObject);
 
 			Issue issue = new Issue(id, title, status, assignee);
@@ -101,8 +101,7 @@ public class WebApi {
 
 		String title = jsonObj.get("fields").getAsJsonObject().get("summary").getAsString();
 		IssueStatus status = extractStatus(jsonObj);
-		String assignee = jsonObj.get("fields").getAsJsonObject().get("assignee").getAsJsonObject().get("displayName")
-				.getAsString();
+		String assignee = extractAssignee(jsonObj);
 
 		return new Issue(issueId, title, status, assignee);
 	}
@@ -147,6 +146,15 @@ public class WebApi {
 			throw new RuntimeException("Unexpected status >" + statusText + "<.");
 		}
 		return status;
+	}
+
+	private String extractAssignee(JsonObject jsonObj) {
+		JsonElement assigneeElement = jsonObj.get("fields").getAsJsonObject().get("assignee");
+		if (assigneeElement != null && !assigneeElement.isJsonNull()) {
+			return assigneeElement.getAsJsonObject().get("displayName").getAsString();
+		} else {
+			return "[Not assigned]";
+		}
 	}
 
 	private static OkHttpClient createClient(ConfigCache configCache) {

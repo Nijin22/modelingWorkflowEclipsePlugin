@@ -64,10 +64,6 @@ public class MasterPage extends SubPage {
 		initConfigButton(parent);
 	}
 
-	public void dispose() {
-		parent.dispose();
-	}
-
 	private Group initIssueGroup(Composite parent) {
 		Group issueGroup = new Group(parent, SWT.NONE);
 		issueGroup.setText("Active issues");

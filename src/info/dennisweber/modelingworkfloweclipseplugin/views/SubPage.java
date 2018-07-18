@@ -25,4 +25,8 @@ public abstract class SubPage {
 		this.mainView = mainView;
 
 	}
+
+	public void dispose() {
+		parent.dispose();
+	}
 }

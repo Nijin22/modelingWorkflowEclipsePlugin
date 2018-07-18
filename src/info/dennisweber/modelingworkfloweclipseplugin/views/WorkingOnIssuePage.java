@@ -60,10 +60,6 @@ public class WorkingOnIssuePage extends SubPage {
 		refreshTables();
 	}
 
-	public void dispose() {
-		parent.dispose();
-	}
-
 	private void initCurrentIssueLabel() {
 		Link currentIssueLabel = new Link(parent, SWT.NONE);
 		currentIssueLabel.setText("Current Issue: <a>[" + issue.getId() + "] " + issue.getTitle() + "</a>");

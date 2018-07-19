@@ -289,7 +289,7 @@ public class WorkingOnIssuePage extends SubPage {
 			// Action Button
 			TableEditor editor = new TableEditor(logTable);
 			Button button = new Button(logTable, SWT.PUSH);
-			button.setText("Revert to commit");
+			button.setText("Revert");
 			button.addListener(SWT.Selection, event -> {
 				boolean confirm = MessageDialog.openConfirm(shell, "Reset changes?",
 						"Are you sure you want to reset all changes made since " + commit.relativeTime + "?\n\n"
@@ -310,8 +310,11 @@ public class WorkingOnIssuePage extends SubPage {
 			item.setData(buttonKey, button);
 		}
 		for (int i = 0; i < logTable.getColumnCount(); i++) {
-			// TODO: Limit maximum width of message column
 			logTable.getColumn(i).pack();
+		}
+		// Limit maximum width of message column
+		if (logTable.getColumn(1).getWidth() > 200) {
+			logTable.getColumn(1).setWidth(200);
 		}
 
 		checkWhetherToEnableCommitButton();

@@ -72,6 +72,7 @@ public class CreatePrDialog extends TitleAreaDialog {
 		container.setLayout(layout);
 
 		// Branch selection:
+		// TODO: This can be replaced by the BRANCHED_FROM branch!
 		SelectionListener listener = new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {

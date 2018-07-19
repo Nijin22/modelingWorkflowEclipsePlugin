@@ -14,6 +14,7 @@ import org.eclipse.core.resources.IProject;
 
 public class GitInterface {
 	private IProject eclipseProject;
+	private static final String MERGE_FROM_IDENTIFIER = "Branched of from: ";
 
 	public GitInterface(IProject eclipseProject) {
 		this.eclipseProject = eclipseProject;
@@ -44,6 +45,26 @@ public class GitInterface {
 
 			// Create (and checkout) the new branch
 			executeGitCommand("checkout -b " + newBranchName);
+
+			// Store the from-Branch as a new (empty) commit.
+			String msg = MERGE_FROM_IDENTIFIER + baseBranch;
+			executeGitCommand("commit --allow-empty -m \"" + msg + "\"");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public String getBasedOnBranch() {
+		try {
+			List<String> res = executeGitCommand(
+					"log --grep=\"" + MERGE_FROM_IDENTIFIER + "\" --oneline --format=\"%s\" -n 1");
+			if (res.isEmpty()) {
+				// No base branch identified in log.
+				// The current branch might be 'master' or a release-branch?
+				return null;
+			} else {
+				return res.get(0).replace(MERGE_FROM_IDENTIFIER, "");
+			}
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -128,11 +149,12 @@ public class GitInterface {
 		}
 	}
 
-	public List<CommitDto> getLog() {
+	public List<CommitDto> getLogSinceBranchOff(String compareBranch) {
 		List<CommitDto> commits = new LinkedList<CommitDto>();
 		try {
 			final String separator = "/"; // Separator for git. May not appear in Hash or time.
-			List<String> result = executeGitCommand("log --format=\"%H" + separator + "%ar" + separator + "%s\"");
+			String cmd = "log --format=\"%H" + separator + "%ar" + separator + "%s\" " + compareBranch + "..HEAD";
+			List<String> result = executeGitCommand(cmd);
 			for (String commitLine : result) {
 				String[] splitted = commitLine.split(separator, 3);
 				CommitDto commit = new CommitDto();

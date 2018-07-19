@@ -279,9 +279,8 @@ public class WorkingOnIssuePage extends SubPage {
 		}
 
 		// Log
-		// TODO: This should only list changes since the branch was branched off.
 		emptyTable(logTable);
-		for (CommitDto commit : gitInterface.getLog()) {
+		for (CommitDto commit : gitInterface.getLogSinceBranchOff(gitInterface.getBasedOnBranch())) {
 			TableItem item = new TableItem(logTable, SWT.NONE);
 			item.setText(0, commit.relativeTime);
 			item.setText(1, commit.message);

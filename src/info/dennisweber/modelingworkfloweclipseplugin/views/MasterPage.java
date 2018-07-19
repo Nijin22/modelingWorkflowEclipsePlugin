@@ -153,7 +153,23 @@ public class MasterPage extends SubPage {
 							mainView.showWorkingOnIssuePage(issue);
 						});
 					}
-					// TODO: InReview issues should have a "view PR button" - but make sure to checkout the branch before!
+					// "View PR"
+					if (issue.getStatus() == IssueStatus.InProgress || issue.getStatus() == IssueStatus.InReview) {
+						try {
+							List<PrDto> PrDtos = webApi.findPr("issue/" + issue.getId());
+							if (!PrDtos.isEmpty()) {
+								createButton(issueTable, item, "View PR", 5, e -> {
+									// Checkout correct Branch
+									gitInterface.checkout("issue/" + issue.getId());
+									// Show PR
+									mainView.showPrPage(issue, PrDtos.get(0));
+								});
+							}
+						} catch (IOException e) {
+							throw new RuntimeException("Failed to find PRs for " + issue.getId());
+						}
+					}
+
 				}
 
 				// Adjust the width of columns
@@ -162,7 +178,7 @@ public class MasterPage extends SubPage {
 				}
 				// Manually Re-Adjust the with of the action column
 				issueTable.getColumn(4).setWidth(100);
-				
+
 			});
 		} catch (IOException e) {
 			System.out.println("Failed to update Issues.");

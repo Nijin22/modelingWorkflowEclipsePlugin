@@ -17,6 +17,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -28,6 +29,7 @@ import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
 import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;
+import info.dennisweber.modelingworkfloweclipseplugin.model.PrDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class MasterPage extends SubPage {
@@ -86,7 +88,7 @@ public class MasterPage extends SubPage {
 		data.heightHint = 200;
 		issueTable.setLayoutData(data);
 
-		String[] titles = { "ID", "Title", "Status", "Assignee", "Action" };
+		String[] titles = { "ID", "Title", "Status", "Assignee", "Action", "Pull Request" };
 		for (int i = 0; i < titles.length; i++) {
 			TableColumn column = new TableColumn(issueTable, SWT.NONE);
 			column.setText(titles[i]);
@@ -126,11 +128,9 @@ public class MasterPage extends SubPage {
 					item.setText(3, issue.getAssignee());
 
 					// Action buttons:
+					// "Start working on issue"
 					if (issue.getStatus() == IssueStatus.ToDo) { // Start working on issue:
-						TableEditor editor = new TableEditor(issueTable);
-						Button button = new Button(issueTable, SWT.PUSH);
-						button.setText("Start working on issue");
-						button.addListener(SWT.Selection, event -> {
+						createButton(issueTable, item, "Start Issue", 4, event -> {
 							StartWorkingOnIssueDialog dialog = new StartWorkingOnIssueDialog(shell, issue, gitInterface,
 									webApi);
 							dialog.create();
@@ -144,26 +144,14 @@ public class MasterPage extends SubPage {
 								break;
 							}
 						});
-						button.pack();
-						issueTableButtons.add(button);
-						editor.minimumWidth = button.getSize().x;
-						editor.horizontalAlignment = SWT.LEFT;
-						editor.setEditor(button, item, 4);
 					}
+					// "Continue working on issue"
 					if (issue.getStatus() == IssueStatus.InProgress) { // Continue working on issue:
-						TableEditor editor = new TableEditor(issueTable);
-						Button button = new Button(issueTable, SWT.PUSH);
-						button.setText("Continue working on issue");
-						button.addListener(SWT.Selection, event -> {
+						createButton(issueTable, item, "Continue Issue", 4, event -> {
 							gitInterface.fetch();
 							gitInterface.checkout("issue/" + issue.getId());
 							mainView.showWorkingOnIssuePage(issue);
 						});
-						button.pack();
-						issueTableButtons.add(button);
-						editor.minimumWidth = button.getSize().x;
-						editor.horizontalAlignment = SWT.LEFT;
-						editor.setEditor(button, item, 4);
 					}
 					// TODO: InReview issues should have a "view PR button" - but make sure to checkout the branch before!
 				}
@@ -172,11 +160,29 @@ public class MasterPage extends SubPage {
 				for (int i = 0; i < issueTable.getColumnCount(); i++) {
 					issueTable.getColumn(i).pack();
 				}
+				// Manually Re-Adjust the with of the action column
+				issueTable.getColumn(4).setWidth(100);
+				
 			});
 		} catch (IOException e) {
 			System.out.println("Failed to update Issues.");
 			e.printStackTrace();
 		}
+	}
+
+	private void createButton(Table issueTable, TableItem item, String text, int colIndex, Listener listener) {
+		Button button = new Button(issueTable, SWT.PUSH);
+		button.setText(text);
+		button.addListener(SWT.Selection, listener);
+		button.pack();
+		issueTableButtons.add(button);
+		TableEditor editor = new TableEditor(issueTable);
+		editor.minimumWidth = button.getSize().x;
+		editor.horizontalAlignment = SWT.LEFT;
+		editor.setEditor(button, item, colIndex);
+		editor.grabHorizontal = true;
+		editor.grabVertical = true;
+		editor.layout();
 	}
 
 	private Button initIssueRefreshButton(Composite parent) {

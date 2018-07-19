@@ -279,6 +279,7 @@ public class WorkingOnIssuePage extends SubPage {
 		}
 
 		// Log
+		// TODO: This should only list changes since the branch was branched off.
 		emptyTable(logTable);
 		for (CommitDto commit : gitInterface.getLog()) {
 			TableItem item = new TableItem(logTable, SWT.NONE);

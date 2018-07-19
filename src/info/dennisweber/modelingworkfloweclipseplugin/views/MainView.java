@@ -136,9 +136,14 @@ public class MainView extends ViewPart {
 		jiraApi = new WebApi(configCache);
 		gitInterface = new GitInterface(project);
 
+		String currentBranch = gitInterface.getCurrentBranch();
+
+		// Update the branch, in case there have been changes in remote
+		gitInterface.updateFromRemote(currentBranch);
+
 		// Detect if that project is on the "master" or a issue-branch and open
 		// corresponding page
-		String currentBranch = gitInterface.getCurrentBranch();
+
 		if (currentBranch.equals("master")) {
 			System.out.println("On >master<. Opening MasterPage.");
 			showMasterPage();
@@ -155,7 +160,6 @@ public class MainView extends ViewPart {
 			MessageDialog.openError(shell, "Unexpected git branch",
 					"The repository is neither on master, nor a issue branch. Please commit your changes and 'git checkout master' manually.");
 		}
-
 	}
 
 }

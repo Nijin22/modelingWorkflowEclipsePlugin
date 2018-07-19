@@ -51,13 +51,45 @@ public class GitInterface {
 
 	public void checkout(String branchName) {
 		try {
-			// TODO: Pull!
 			fetch();
-			
+
 			if (doesBranchExist(branchName)) {
 				executeGitCommand("checkout " + branchName);
 			} else {
 				executeGitCommand("checkout -b " + branchName);
+			}
+
+			updateFromRemote(branchName);
+
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Updates the currently checked out branch from remote "origin" (if possible).
+	 * 
+	 * @param thisBranchName
+	 *            the name of the current and remote branch (can be read from
+	 *            getCurrentBranch()).
+	 * 
+	 * @return true, if the branch was updated. False otherwise.
+	 */
+	public boolean updateFromRemote(String thisBranchName) {
+		try {
+			fetch();
+
+			// Check if this reference exists as a remote
+			if (executeGitCommand("show-ref refs/remotes/origin/" + thisBranchName).isEmpty()) {
+				// Remote DOES NOT exist
+				System.out.println("Local branch not updated. No remote branch.");
+				return false;
+			} else {
+				// Remote exists. Make sure update the local branch.
+				// Merge remote
+				executeGitCommand("merge refs/remotes/origin/" + thisBranchName + " --ff-only");
+				System.out.println("Local branch updated.");
+				return true;
 			}
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
@@ -66,7 +98,7 @@ public class GitInterface {
 
 	public boolean doesBranchExist(String branchName) {
 		try {
-			List<String> res = executeGitCommand("git show-ref refs/heads/" + branchName);
+			List<String> res = executeGitCommand("show-ref refs/heads/" + branchName);
 			if (res.isEmpty()) {
 				// Nothing found
 				return false;

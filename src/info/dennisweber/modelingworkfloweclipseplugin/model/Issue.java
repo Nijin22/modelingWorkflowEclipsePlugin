@@ -1,10 +1,30 @@
 package info.dennisweber.modelingworkfloweclipseplugin.model;
 
+import java.util.Comparator;
+
 public class Issue {
 	private String id;
 	private String title;
 	private IssueStatus status;
 	private String assignee;
+
+	private static class StatusThenIdComparator implements Comparator<Issue> {
+		@Override
+		public int compare(Issue i1, Issue i2) {
+			// -1 - less than, 1 - greater than, 0 - equal
+			int statusCompare = i1.status.compareTo(i2.status);
+			if (statusCompare != 0) {
+				return statusCompare;
+			} else {
+				return i1.id.compareToIgnoreCase(i2.id);
+			}
+
+		}
+	}
+
+	public static StatusThenIdComparator getStatusThenIdComparator() {
+		return new StatusThenIdComparator();
+	}
 
 	public Issue(String id, String title, IssueStatus status, String assignee) {
 		super();

@@ -1,6 +1,7 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -106,6 +107,9 @@ public class MasterPage extends SubPage {
 	private void fillTable(Table issueTable) {
 		try {
 			List<Issue> issues = webApi.getIssues();
+
+			// Sort the issues
+			Collections.sort(issues, Issue.getStatusThenIdComparator());
 
 			// Draw the update
 			Display.getDefault().syncExec(() -> {

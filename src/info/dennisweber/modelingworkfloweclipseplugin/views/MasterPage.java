@@ -238,7 +238,6 @@ public class MasterPage extends SubPage {
 		return createIssueLink;
 	}
 
-	// TODO: Make sure to show that this is mocked data.
 	private Group initReleaseBranchesGroup(Composite parent) {
 		Group releaseBranchesGroup = new Group(parent, SWT.NONE);
 		releaseBranchesGroup.setText("Active release branches:");
@@ -266,13 +265,13 @@ public class MasterPage extends SubPage {
 			TableColumn column = new TableColumn(releaseBranchesTable, SWT.NONE);
 			column.setText(titles[i]);
 		}
-		int count = 2;
+		int count = 4;
 		for (int i = 0; i < count; i++) {
 			TableItem item = new TableItem(releaseBranchesTable, SWT.NONE);
-			item.setText(0, Integer.toString(i));
-			item.setText(1, "Xh ago");
-			item.setText(2, "3.1.4");
-			item.setText(3, "This should be a button");
+			item.setText(0, "NOT");
+			item.setText(1, "IMPLEMENTED");
+			item.setText(2, "IN");
+			item.setText(3, "PROTOTYPE");
 		}
 		for (int i = 0; i < titles.length; i++) {
 			releaseBranchesTable.getColumn(i).pack();

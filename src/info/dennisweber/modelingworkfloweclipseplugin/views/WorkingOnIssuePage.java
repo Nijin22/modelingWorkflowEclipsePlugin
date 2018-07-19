@@ -310,6 +310,7 @@ public class WorkingOnIssuePage extends SubPage {
 			item.setData(buttonKey, button);
 		}
 		for (int i = 0; i < logTable.getColumnCount(); i++) {
+			// TODO: Limit maximum width of message column
 			logTable.getColumn(i).pack();
 		}
 

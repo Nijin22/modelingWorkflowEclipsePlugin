@@ -238,6 +238,7 @@ public class MasterPage extends SubPage {
 		return createIssueLink;
 	}
 
+	// TODO: Make sure to show that this is mocked data.
 	private Group initReleaseBranchesGroup(Composite parent) {
 		Group releaseBranchesGroup = new Group(parent, SWT.NONE);
 		releaseBranchesGroup.setText("Active release branches:");

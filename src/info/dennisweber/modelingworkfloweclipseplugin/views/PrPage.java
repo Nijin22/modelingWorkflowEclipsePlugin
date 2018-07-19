@@ -24,14 +24,17 @@ import org.eclipse.swt.widgets.TableItem;
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
+import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;
 import info.dennisweber.modelingworkfloweclipseplugin.model.PrDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class PrPage extends SubPage {
 	private Issue issue;
 	private PrDto pr;
+	boolean canBeMerged = false;
+	private Button acceptButton;
+	private Button declineButton;
 
-	// TODO: Accept / Decline should only be available if PR is in review.
 	public PrPage(Composite originalParent, WebApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView, Issue issue, PrDto pr) {
 
@@ -46,25 +49,26 @@ public class PrPage extends SubPage {
 		mainLayout.numColumns = 1;
 		parent.setLayout(mainLayout);
 
-		boolean canBeMerged = false;
 		try {
 			canBeMerged = webApi.canMergePr(pr.id);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 		initTopLabels();
-		initIssueStatusRadioButtons();
 		initChangedRessources();
-		initConflictLabels(canBeMerged);
-		initAcceptButton(canBeMerged);
+		initIssueStatusRadioButtons();
+		initConflictLabels();
+		initAcceptButton();
 		initDeclineButton();
 		initCancelButton();
+
+		checkButtonEnableStatus();
 	}
 
-	private void initAcceptButton(boolean canBeMerged) {
-		Button btn = new Button(parent, SWT.NONE);
-		btn.setText("Accept pull request and merge changes");
-		btn.addListener(SWT.Selection, e -> {
+	private void initAcceptButton() {
+		acceptButton = new Button(parent, SWT.NONE);
+		acceptButton.setText("Accept pull request and merge changes");
+		acceptButton.addListener(SWT.Selection, e -> {
 			try {
 				// Accept PR (which should merge)
 				webApi.mergePr(pr.id, pr.version);
@@ -79,22 +83,19 @@ public class PrPage extends SubPage {
 			}
 
 		});
-		if (!canBeMerged) {
-			btn.setEnabled(false);
-		}
 	}
 
 	private void initDeclineButton() {
-		Button btn = new Button(parent, SWT.NONE);
-		btn.setText("Decline pull request");
-		btn.addListener(SWT.Selection, e -> {
+		declineButton = new Button(parent, SWT.NONE);
+		declineButton.setText("Decline pull request");
+		declineButton.addListener(SWT.Selection, e -> {
 			MessageDialog.openError(shell, "Not implemented in protype",
 					"This featuer is not available in the prototype. It can still be done via the Bitbucket Web UI");
 		});
 
 	}
 
-	private void initConflictLabels(boolean canBeMerged) {
+	private void initConflictLabels() {
 		Label lbl = new Label(parent, SWT.None);
 		if (canBeMerged) {
 			lbl.setText("Can be merged.");
@@ -154,13 +155,16 @@ public class PrPage extends SubPage {
 						// User switched to "In Progress"
 						webApi.moveIssueReopen(issue.getId());
 						webApi.moveIssueInProgress(issue.getId());
+						issue.setStatus(IssueStatus.InProgress);
 					} else {
 						// User switched to "In Review"
 						webApi.moveIssueInReview(issue.getId());
+						issue.setStatus(IssueStatus.InReview);
 					}
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
+				checkButtonEnableStatus();
 			}
 
 			@Override
@@ -180,6 +184,22 @@ public class PrPage extends SubPage {
 		default:
 			throw new RuntimeException("Issue " + issue.getId() + " is in status " + issue.getStatus()
 					+ ". This should not happen when viewing the Pull Request");
+		}
+	}
+
+	private void checkButtonEnableStatus() {
+		// Accept Button:
+		if (canBeMerged && issue.getStatus() == IssueStatus.InReview) {
+			acceptButton.setEnabled(true);
+		} else {
+			acceptButton.setEnabled(false);
+		}
+
+		// Decline Button:
+		if (issue.getStatus() == IssueStatus.InReview) {
+			declineButton.setEnabled(true);
+		} else {
+			declineButton.setEnabled(false);
 		}
 	}
 

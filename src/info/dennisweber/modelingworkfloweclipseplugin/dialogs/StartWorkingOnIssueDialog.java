@@ -19,6 +19,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
+import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class StartWorkingOnIssueDialog extends TitleAreaDialog {
@@ -85,6 +86,7 @@ public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 
 		try {
 			jiraApi.moveIssueInProgress(issue.getId());
+			issue.setStatus(IssueStatus.InProgress);
 		} catch (IOException e) {
 			MessageDialog.openError(parentShell, "Failed to update Jira Issue", e.getLocalizedMessage());
 			e.printStackTrace();

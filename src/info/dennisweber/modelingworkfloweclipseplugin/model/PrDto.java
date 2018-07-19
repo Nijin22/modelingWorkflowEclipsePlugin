@@ -2,6 +2,7 @@ package info.dennisweber.modelingworkfloweclipseplugin.model;
 
 public class PrDto {
 	public int id;
+	public int version;
 	public String title;
 	public String description;
 	public String state;

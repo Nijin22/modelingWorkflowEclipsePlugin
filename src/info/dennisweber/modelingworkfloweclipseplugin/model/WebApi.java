@@ -120,6 +120,10 @@ public class WebApi {
 	public void moveIssueReopen(String issueId) throws IOException {
 		performIssueTransition(issueId, 741); // Transition it via 741 (--> To reopend)
 	}
+	
+	public void moveIssueResolved(String issueId) throws IOException {
+		performIssueTransition(issueId, 5); // Transition it via 5 (--> Resolved)
+	}
 
 	public PrDto createPr(String sourceBranch, String targetBranch) throws IOException {
 		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests";
@@ -162,12 +166,24 @@ public class WebApi {
 	}
 
 	public boolean canMergePr(int id) throws IOException {
-		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests/"
-				+ id + "/merge";
+		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests/" + id
+				+ "/merge";
 		String json = makeRequest(client, RequestType.GET, url, "");
 		JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
 
 		return jsonObj.get("canMerge").getAsBoolean();
+	}
+
+	public PrDto mergePr(int id, int version) throws IOException {
+		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests/" + id
+				+ "/merge?version=" + version;
+		String json = makeRequest(client, RequestType.POST, url, "");
+		PrDto pr = gson.fromJson(json, PrDto.class);
+		if (!pr.state.equals("MERGED")) {
+			throw new RuntimeException("Somehow failed to merge the PR.");
+		}
+
+		return pr;
 	}
 
 	private enum RequestType {

@@ -31,6 +31,7 @@ public class PrPage extends SubPage {
 	private Issue issue;
 	private PrDto pr;
 
+	// TODO: Accept / Decline should only be available if PR is in review.
 	public PrPage(Composite originalParent, WebApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView, Issue issue, PrDto pr) {
 
@@ -64,7 +65,19 @@ public class PrPage extends SubPage {
 		Button btn = new Button(parent, SWT.NONE);
 		btn.setText("Accept pull request and merge changes");
 		btn.addListener(SWT.Selection, e -> {
-			// TODO: Implement acceptance of PR
+			try {
+				// Accept PR (which should merge)
+				webApi.mergePr(pr.id, pr.version);
+
+				// Update Issue
+				webApi.moveIssueResolved(issue.getId());
+
+				gitInterface.checkout("master");
+				mainView.showMasterPage();
+			} catch (IOException e1) {
+				MessageDialog.openError(shell, "Failed to accept PR", e1.getLocalizedMessage());
+			}
+
 		});
 		if (!canBeMerged) {
 			btn.setEnabled(false);
@@ -75,7 +88,7 @@ public class PrPage extends SubPage {
 		Button btn = new Button(parent, SWT.NONE);
 		btn.setText("Decline pull request");
 		btn.addListener(SWT.Selection, e -> {
-			MessageDialog.openError(shell, "Not impelemtend in protype",
+			MessageDialog.openError(shell, "Not implemented in protype",
 					"This featuer is not available in the prototype. It can still be done via the Bitbucket Web UI");
 		});
 

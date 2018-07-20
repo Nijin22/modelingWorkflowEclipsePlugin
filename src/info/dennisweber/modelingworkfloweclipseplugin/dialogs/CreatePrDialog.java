@@ -26,7 +26,6 @@ import info.dennisweber.modelingworkfloweclipseplugin.model.PrDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class CreatePrDialog extends TitleAreaDialog {
-	private Shell shell; // TODO: Replace in all files with super.getShell
 	private Issue issue;
 	private GitInterface gitInterface;
 	private WebApi webApi;
@@ -39,7 +38,6 @@ public class CreatePrDialog extends TitleAreaDialog {
 
 	public CreatePrDialog(Shell parentShell, Issue issue, GitInterface gitInterface, WebApi webApi) {
 		super(parentShell);
-		this.shell = parentShell;
 		this.issue = issue;
 		this.gitInterface = gitInterface;
 		this.webApi = webApi;

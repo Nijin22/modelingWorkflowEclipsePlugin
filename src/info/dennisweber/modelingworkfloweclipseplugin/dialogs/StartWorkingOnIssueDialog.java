@@ -23,7 +23,6 @@ import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class StartWorkingOnIssueDialog extends TitleAreaDialog {
-	private Shell parentShell;
 	private GitInterface gitInterface;
 	private WebApi jiraApi;
 	private Issue issue;
@@ -31,7 +30,6 @@ public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 
 	public StartWorkingOnIssueDialog(Shell parentShell, Issue issue, GitInterface gitInterface, WebApi jiraApi) {
 		super(parentShell);
-		this.parentShell = parentShell;
 		this.issue = issue;
 		this.gitInterface = gitInterface;
 		this.jiraApi = jiraApi;
@@ -88,7 +86,7 @@ public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 			jiraApi.moveIssueInProgress(issue.getId());
 			issue.setStatus(IssueStatus.InProgress);
 		} catch (IOException e) {
-			MessageDialog.openError(parentShell, "Failed to update Jira Issue", e.getLocalizedMessage());
+			MessageDialog.openError(super.getShell(), "Failed to update Jira Issue", e.getLocalizedMessage());
 			e.printStackTrace();
 		}
 

@@ -29,7 +29,13 @@ public class WebApi {
 
 	private int activeSprintCached = -1;
 
-	public static boolean TestConfigCache(ConfigCache cacheToTest) {
+	/**
+	 * Check if the given config Cache is valid.
+	 * 
+	 * @param cacheToTest
+	 * @return A error description, or null if valid.
+	 */
+	public static String TestConfigCache(ConfigCache cacheToTest) {
 		OkHttpClient testClient = createClient(cacheToTest);
 		String url;
 
@@ -37,15 +43,19 @@ public class WebApi {
 			// Check bitbucket
 			url = cacheToTest.getBbBaseUrl() + "/rest/api/1.0" + cacheToTest.getBbRepoPath();
 			makeRequest(testClient, RequestType.GET, url, "");
+		}catch (Exception e) {
+			return "Failed to validate Bitbucket connection. Error: " + e.getLocalizedMessage();
+		}
 
+		try {
 			// Check Jira
 			url = cacheToTest.getJiraUrl() + "/rest/agile/1.0/board/" + cacheToTest.getJiraBoardId();
 			makeRequest(testClient, RequestType.GET, url, "");
 		} catch (Exception e) {
-			return false;
+			return "Failed to validate Jira connection. Error: " + e.getLocalizedMessage();
 		}
 
-		return true;
+		return null;
 	}
 
 	public WebApi(ConfigCache configCache) {

@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -129,7 +130,10 @@ public class MainView extends ViewPart {
 
 			ConfigurationDialog configDialog = new ConfigurationDialog(shell, configCache);
 			configDialog.create();
-			configDialog.open(); // Open dialog and block until it is closed again
+			if (configDialog.open() != Window.OK) { // Open dialog and block until it is closed again
+				MessageDialog.openError(shell, "Error", "You MUST configure the backend to use the workflow tool");
+				return;
+			}
 		}
 
 		// Initialize APIs

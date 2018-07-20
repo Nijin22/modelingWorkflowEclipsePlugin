@@ -66,20 +66,22 @@ public class ConfigurationDialog extends TitleAreaDialog {
 				jiraBoardTextfield.getText(), usernameTextfield.getText(), passwordTextfield.getText());
 
 		// Verify validity of config:
-		if (WebApi.TestConfigCache(configCache)) {
+		String configError = WebApi.TestConfigCache(configCache);
+		if (configError == null) {
 			// Config is valid
 			if (storeConfigButton.getSelection()) {
 				try {
 					configCache.storeConfig();
 				} catch (IOException e) {
-					MessageDialog.openError(super.getShell(), "Failed to save configuration file", e.getLocalizedMessage());
+					MessageDialog.openError(super.getShell(), "Failed to save configuration file",
+							e.getLocalizedMessage());
 				}
 			}
 			super.okPressed();
 		} else {
 			// Config is not valid
 			MessageDialog.openError(super.getShell(), "Invalid configuration",
-					"This configuration is invalid. Please re-check everything you've entered.");
+					"This configuration is invalid. " + configError);
 		}
 
 	}

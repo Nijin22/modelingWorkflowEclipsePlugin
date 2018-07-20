@@ -126,6 +126,13 @@ public class GitInterface {
 				// Content would be the SHA of the branch
 				return true;
 			}
+		} catch (GitCommandFailedException e) {
+			if (e.getResults().isEmpty()) {
+				// still fine
+				return false;
+			} else {
+				throw e;
+			}
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
 		}

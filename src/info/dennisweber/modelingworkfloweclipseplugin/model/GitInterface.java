@@ -35,13 +35,12 @@ public class GitInterface {
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}
-
 	}
 
 	public void createBranch(String baseBranch, String newBranchName) {
 		try {
-			// Checkout base branch
-			executeGitCommand("checkout " + baseBranch);
+			// Checkout base branch (and update it)
+			checkout(baseBranch);
 
 			// Create (and checkout) the new branch
 			executeGitCommand("checkout -b " + newBranchName);

@@ -1,14 +1,11 @@
 package info.dennisweber.modelingworkfloweclipseplugin.dialogs;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
+import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -24,16 +21,18 @@ import org.eclipse.swt.widgets.TableItem;
 
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
+import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;
 import info.dennisweber.modelingworkfloweclipseplugin.model.PrDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class CreatePrDialog extends TitleAreaDialog {
-	private Shell shell;
+	private Shell shell; // TODO: Replace in all files with super.getShell
 	private Issue issue;
 	private GitInterface gitInterface;
 	private WebApi webApi;
 
-	private Set<Button> branchButtons = new HashSet<Button>();
+	private String basedOnBranch;
+
 	private Table changesTable;
 	private Button issueStatusBtnYes;
 	private PrDto createdPr = null;
@@ -44,13 +43,15 @@ public class CreatePrDialog extends TitleAreaDialog {
 		this.issue = issue;
 		this.gitInterface = gitInterface;
 		this.webApi = webApi;
+
+		this.basedOnBranch = gitInterface.getBasedOnBranch();
 	}
 
 	@Override
 	public void create() {
 		super.create();
 		setTitle("Creating a Pull Request for Issue " + " [" + issue.getId() + "] " + issue.getTitle());
-		// setMessage("MESSAGE HERE", IMessageProvider.NONE);
+		setMessage("Merging issue/" + issue.getId() + " back into " + this.basedOnBranch, IMessageProvider.NONE);
 	}
 
 	/**
@@ -70,38 +71,6 @@ public class CreatePrDialog extends TitleAreaDialog {
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		GridLayout layout = new GridLayout(1, false);
 		container.setLayout(layout);
-
-		// Branch selection:
-		// TODO: This can be replaced by the BRANCHED_FROM branch!
-		SelectionListener listener = new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				if (((Button) e.widget).getSelection()) {
-					reloadChanges();
-				}
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-			}
-		};
-		Group branchSelectionGroup = new Group(container, SWT.NONE);
-		branchSelectionGroup.setLayout(new RowLayout(SWT.VERTICAL));
-		branchSelectionGroup.setText("Branch to merge into:");
-		for (String releaseBranch : gitInterface.getReleaseBranches()) {
-			releaseBranch = releaseBranch.replace("origin/", "");
-			Button button = new Button(branchSelectionGroup, SWT.RADIO);
-			button.setText(releaseBranch);
-			button.setData(releaseBranch);
-			button.addSelectionListener(listener);
-			branchButtons.add(button);
-		}
-		Button masterBranchButton = new Button(branchSelectionGroup, SWT.RADIO);
-		masterBranchButton.setText("master");
-		masterBranchButton.setData("master"); // Name of the branch
-		masterBranchButton.setSelection(true); // Select master by default
-		masterBranchButton.addSelectionListener(listener);
-		branchButtons.add(masterBranchButton);
 
 		// Issue status selection:
 		Group issueStatusGroup = new Group(container, SWT.NONE);
@@ -131,7 +100,7 @@ public class CreatePrDialog extends TitleAreaDialog {
 	protected void okPressed() {
 		// Create PR:
 		try {
-			createdPr = webApi.createPr(gitInterface.getCurrentBranch(), getSelectedBranch());
+			createdPr = webApi.createPr(gitInterface.getCurrentBranch(), basedOnBranch);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -142,6 +111,7 @@ public class CreatePrDialog extends TitleAreaDialog {
 			// User selected that someone should review this issue.
 			try {
 				webApi.moveIssueInReview(issue.getId());
+				issue.setStatus(IssueStatus.InReview);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -161,9 +131,8 @@ public class CreatePrDialog extends TitleAreaDialog {
 
 	private void reloadChanges() {
 		String thisBranch = "HEAD";
-		String mergeOntoBranch = getSelectedBranch();
 
-		List<String> changedFiles = gitInterface.getChangedFilesBetweenTwoBranches(mergeOntoBranch, thisBranch);
+		List<String> changedFiles = gitInterface.getChangedFilesBetweenTwoBranches(basedOnBranch, thisBranch);
 
 		changesTable.removeAll();
 		for (String fileName : changedFiles) {
@@ -173,16 +142,6 @@ public class CreatePrDialog extends TitleAreaDialog {
 
 		changesTable.getColumn(0).pack();
 
-	}
-
-	private String getSelectedBranch() {
-		for (Button button : branchButtons) {
-			if (button.getSelection()) {
-				return button.getData().toString();
-			}
-		}
-
-		throw new RuntimeException("No button selected."); // Should never happen
 	}
 
 }

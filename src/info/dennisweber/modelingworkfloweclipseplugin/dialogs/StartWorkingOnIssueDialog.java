@@ -65,7 +65,7 @@ public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 
 		Button masterBranchButton = new Button(branchSelectionGroup, SWT.RADIO);
 		masterBranchButton.setText("Multiple releases or master branch");
-		masterBranchButton.setData("origin/master"); // Name of the branch
+		masterBranchButton.setData("master"); // Name of the branch
 		masterBranchButton.setSelection(true); // Select master by default
 		branchButtons.add(masterBranchButton);
 

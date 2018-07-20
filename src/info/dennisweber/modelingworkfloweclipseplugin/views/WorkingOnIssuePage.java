@@ -205,7 +205,14 @@ public class WorkingOnIssuePage extends SubPage {
 				Button viewPrButton = new Button(changesLogGroup, SWT.NONE);
 				viewPrButton.setText("View Pull Request");
 				viewPrButton.addListener(SWT.Selection, e -> {
-					mainView.showPrPage(issue, prs.get(0));
+					try {
+						PrDto freshPr = webApi.findPr("issue/" + issue.getId()).get(0); // As the cached one might be
+																						// outdated.
+						mainView.showPrPage(issue, freshPr);
+					} catch (IOException e1) {
+						MessageDialog.openError(shell, "Failed to open PR page", "PR is no longer available.");
+					}
+
 				});
 			}
 		} catch (IOException e) {

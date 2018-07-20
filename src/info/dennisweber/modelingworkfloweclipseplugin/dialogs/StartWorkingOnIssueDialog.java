@@ -19,10 +19,10 @@ import org.eclipse.swt.widgets.Shell;
 
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
+import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
 public class StartWorkingOnIssueDialog extends TitleAreaDialog {
-	private Shell parentShell;
 	private GitInterface gitInterface;
 	private WebApi jiraApi;
 	private Issue issue;
@@ -30,7 +30,6 @@ public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 
 	public StartWorkingOnIssueDialog(Shell parentShell, Issue issue, GitInterface gitInterface, WebApi jiraApi) {
 		super(parentShell);
-		this.parentShell = parentShell;
 		this.issue = issue;
 		this.gitInterface = gitInterface;
 		this.jiraApi = jiraApi;
@@ -64,7 +63,7 @@ public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 
 		Button masterBranchButton = new Button(branchSelectionGroup, SWT.RADIO);
 		masterBranchButton.setText("Multiple releases or master branch");
-		masterBranchButton.setData("origin/master"); // Name of the branch
+		masterBranchButton.setData("master"); // Name of the branch
 		masterBranchButton.setSelection(true); // Select master by default
 		branchButtons.add(masterBranchButton);
 
@@ -85,8 +84,9 @@ public class StartWorkingOnIssueDialog extends TitleAreaDialog {
 
 		try {
 			jiraApi.moveIssueInProgress(issue.getId());
+			issue.setStatus(IssueStatus.InProgress);
 		} catch (IOException e) {
-			MessageDialog.openError(parentShell, "Failed to update Jira Issue", e.getLocalizedMessage());
+			MessageDialog.openError(super.getShell(), "Failed to update Jira Issue", e.getLocalizedMessage());
 			e.printStackTrace();
 		}
 

@@ -1,6 +1,10 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.layout.GridData;
@@ -17,19 +21,15 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
+import info.dennisweber.modelingworkfloweclipseplugin.dialogs.CreatePrDialog;
 import info.dennisweber.modelingworkfloweclipseplugin.model.CommitDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
+import info.dennisweber.modelingworkfloweclipseplugin.model.PrDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
-public class WorkingOnIssuePage {
-	private WebApi jiraApi;
-	private GitInterface gitInterface;
-	private Shell shell;
-	private Composite parent;
-	private ConfigCache configCache;
-	private MainView mainView;
+public class WorkingOnIssuePage extends SubPage {
 	private Issue issue;
 
 	private Text commitMessageTextbox;
@@ -43,11 +43,8 @@ public class WorkingOnIssuePage {
 
 	public WorkingOnIssuePage(Composite originalParent, WebApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView, Issue issue) {
-		this.jiraApi = jiraApi;
-		this.gitInterface = gitInterface;
-		this.shell = shell;
-		this.configCache = configCache;
-		this.mainView = mainView;
+
+		super(originalParent, jiraApi, configCache, shell, gitInterface, mainView);
 		this.issue = issue;
 
 		// Layout this Page
@@ -65,10 +62,6 @@ public class WorkingOnIssuePage {
 		initBackToOverviewButton();
 
 		refreshTables();
-	}
-
-	public void dispose() {
-		parent.dispose();
 	}
 
 	private void initCurrentIssueLabel() {
@@ -193,12 +186,31 @@ public class WorkingOnIssuePage {
 			logTable.getColumn(i).pack();
 		}
 
-		// Create PR Button
-		Button createPrButton = new Button(changesLogGroup, SWT.NONE);
-		createPrButton.setText("Create Pull Request");
-		createPrButton.addListener(SWT.Selection, event -> {
-			Program.launch(configCache.getBbBaseUrl() + configCache.getBbRepoPath() + "pull-requests?create");
-		});
+		try {
+			List<PrDto> prs = webApi.findPr("issue/" + issue.getId());
+			if (prs.isEmpty()) {
+				// Create PR Button
+				Button createPrButton = new Button(changesLogGroup, SWT.NONE);
+				createPrButton.setText("Create Pull Request");
+				createPrButton.addListener(SWT.Selection, event -> {
+					CreatePrDialog dialog = new CreatePrDialog(shell, issue, gitInterface, webApi);
+					dialog.create();
+					if (dialog.open() == Window.OK) {
+						// User clicked on "OK"
+						mainView.showPrPage(issue, dialog.getCreatedPr());
+					}
+				});
+			} else {
+				// There already is a PR!
+				Button viewPrButton = new Button(changesLogGroup, SWT.NONE);
+				viewPrButton.setText("View Pull Request");
+				viewPrButton.addListener(SWT.Selection, e -> {
+					mainView.showPrPage(issue, prs.get(0));
+				});
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 
 	}
 
@@ -268,7 +280,7 @@ public class WorkingOnIssuePage {
 
 		// Log
 		emptyTable(logTable);
-		for (CommitDto commit : gitInterface.getLog()) {
+		for (CommitDto commit : gitInterface.getLogSinceBranchOff(gitInterface.getBasedOnBranch())) {
 			TableItem item = new TableItem(logTable, SWT.NONE);
 			item.setText(0, commit.relativeTime);
 			item.setText(1, commit.message);
@@ -276,7 +288,7 @@ public class WorkingOnIssuePage {
 			// Action Button
 			TableEditor editor = new TableEditor(logTable);
 			Button button = new Button(logTable, SWT.PUSH);
-			button.setText("Revert to commit");
+			button.setText("Revert");
 			button.addListener(SWT.Selection, event -> {
 				boolean confirm = MessageDialog.openConfirm(shell, "Reset changes?",
 						"Are you sure you want to reset all changes made since " + commit.relativeTime + "?\n\n"
@@ -298,6 +310,10 @@ public class WorkingOnIssuePage {
 		}
 		for (int i = 0; i < logTable.getColumnCount(); i++) {
 			logTable.getColumn(i).pack();
+		}
+		// Limit maximum width of message column
+		if (logTable.getColumn(1).getWidth() > 200) {
+			logTable.getColumn(1).setWidth(200);
 		}
 
 		checkWhetherToEnableCommitButton();

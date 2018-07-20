@@ -6,9 +6,12 @@ import java.util.List;
 
 import javax.xml.ws.WebServiceException;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import info.dennisweber.modelingworkfloweclipseplugin.model.PrDto.Reference;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.MediaType;
@@ -22,6 +25,7 @@ import okhttp3.Route;
 public class WebApi {
 	private OkHttpClient client;
 	private ConfigCache configCache;
+	private Gson gson = new Gson();
 
 	private int activeSprintCached = -1;
 
@@ -83,8 +87,7 @@ public class WebApi {
 
 			String id = issueJsonObject.get("key").getAsString();
 			String title = issueJsonObject.get("fields").getAsJsonObject().get("summary").getAsString();
-			String assignee = issueJsonObject.get("fields").getAsJsonObject().get("assignee").getAsJsonObject()
-					.get("displayName").getAsString();
+			String assignee = extractAssignee(issueJsonObject);
 			IssueStatus status = extractStatus(issueJsonObject);
 
 			Issue issue = new Issue(id, title, status, assignee);
@@ -101,16 +104,86 @@ public class WebApi {
 
 		String title = jsonObj.get("fields").getAsJsonObject().get("summary").getAsString();
 		IssueStatus status = extractStatus(jsonObj);
-		String assignee = jsonObj.get("fields").getAsJsonObject().get("assignee").getAsJsonObject().get("displayName")
-				.getAsString();
+		String assignee = extractAssignee(jsonObj);
 
 		return new Issue(issueId, title, status, assignee);
 	}
 
 	public void moveIssueInProgress(String issueId) throws IOException {
-		String url = configCache.getJiraUrl() + "/rest/api/2/issue/" + issueId + "/transitions";
-		String json = "{\"transition\":{\"id\":\"4\"}}"; // "Transition it via 4 (Open --> In Progress)
-		makeRequest(client, RequestType.POST, url, json);
+		performIssueTransition(issueId, 4); // Transition it via 4 (Open --> In Progress)
+	}
+
+	public void moveIssueInReview(String issueId) throws IOException {
+		performIssueTransition(issueId, 731); // Transition it via 731 (--> To be reviewed)
+	}
+
+	public void moveIssueReopen(String issueId) throws IOException {
+		performIssueTransition(issueId, 741); // Transition it via 741 (--> To reopend)
+	}
+	
+	public void moveIssueResolved(String issueId) throws IOException {
+		performIssueTransition(issueId, 5); // Transition it via 5 (--> Resolved)
+	}
+
+	public PrDto createPr(String sourceBranch, String targetBranch) throws IOException {
+		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests";
+
+		PrDto pr = new PrDto();
+		pr.title = "Merge >" + sourceBranch + "< into >" + targetBranch + "<.";
+		pr.description = "This PR was automatically created by Dennis' modelling workflow prototype.";
+		pr.state = "OPEN";
+		pr.open = true;
+		pr.closed = false;
+		pr.fromRef = new Reference();
+		pr.fromRef.id = "refs/heads/" + sourceBranch;
+		pr.toRef = new Reference();
+		pr.toRef.id = "refs/heads/" + targetBranch;
+
+		String json = gson.toJson(pr, PrDto.class);
+		String answer = makeRequest(client, RequestType.POST, url, json);
+
+		PrDto returned = gson.fromJson(answer, PrDto.class);
+		return returned;
+	}
+
+	public List<PrDto> findPr(String sourceBranch) throws IOException {
+		List<PrDto> foundPrs = new LinkedList<PrDto>();
+		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath()
+				+ "/pull-requests?limit=999999";
+		String json = makeRequest(client, RequestType.GET, url, "");
+		JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
+
+		// Itearate PRs
+		jsonObj.get("values").getAsJsonArray().forEach(rawPr -> {
+			PrDto pr = gson.fromJson(rawPr, PrDto.class);
+			if (pr.open && pr.fromRef.displayId.equals(sourceBranch)) {
+				// Open PR from sourceBranch
+				foundPrs.add(pr);
+			}
+		});
+
+		return foundPrs;
+	}
+
+	public boolean canMergePr(int id) throws IOException {
+		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests/" + id
+				+ "/merge";
+		String json = makeRequest(client, RequestType.GET, url, "");
+		JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
+
+		return jsonObj.get("canMerge").getAsBoolean();
+	}
+
+	public PrDto mergePr(int id, int version) throws IOException {
+		String url = configCache.getBbBaseUrl() + "/rest/api/1.0" + configCache.getBbRepoPath() + "/pull-requests/" + id
+				+ "/merge?version=" + version;
+		String json = makeRequest(client, RequestType.POST, url, "");
+		PrDto pr = gson.fromJson(json, PrDto.class);
+		if (!pr.state.equals("MERGED")) {
+			throw new RuntimeException("Somehow failed to merge the PR.");
+		}
+
+		return pr;
 	}
 
 	private enum RequestType {
@@ -119,22 +192,46 @@ public class WebApi {
 
 	private IssueStatus extractStatus(JsonObject issueJsonObject) {
 		IssueStatus status;
-		String statusText = issueJsonObject.get("fields").getAsJsonObject().get("status").getAsJsonObject()
-				.get("statusCategory").getAsJsonObject().get("key").getAsString();
-		switch (statusText) {
-		case "new":
+		String statusId = issueJsonObject.get("fields").getAsJsonObject().get("status").getAsJsonObject().get("id")
+				.getAsString();
+		switch (statusId) {
+
+		case "1": // Jira calls it "Open"
+		case "4": // Jira calls it "Reopened"
+		case "10000": // Jira calls it "To Be Refined"
+		case "11000": // Jira calls it "To Do"
 			status = IssueStatus.ToDo;
 			break;
-		case "indeterminate":
+
+		case "3": // Jira calls it "In Progress"
 			status = IssueStatus.InProgress;
 			break;
-		case "done":
+
+		case "5": // Jira calls it "Resolved"
+		case "6": // Jira calls it "Closed"
+		case "10600": // Jira calls it "Done"
 			status = IssueStatus.Done;
 			break;
+
+		case "10001": // Jira calls it "To Be Reviewed"
+		case "10100": // Jira calls it "Test"
+		case "10900": // Jira calls it "In Review"
+			status = IssueStatus.InReview;
+			break;
+
 		default:
-			throw new RuntimeException("Unexpected status >" + statusText + "<.");
+			throw new RuntimeException("Unexpected status >" + statusId + "<.");
 		}
 		return status;
+	}
+
+	private String extractAssignee(JsonObject jsonObj) {
+		JsonElement assigneeElement = jsonObj.get("fields").getAsJsonObject().get("assignee");
+		if (assigneeElement != null && !assigneeElement.isJsonNull()) {
+			return assigneeElement.getAsJsonObject().get("displayName").getAsString();
+		} else {
+			return "[Not assigned]";
+		}
 	}
 
 	private static OkHttpClient createClient(ConfigCache configCache) {
@@ -188,5 +285,11 @@ public class WebApi {
 			throw new WebServiceException("Call failed. (" + response.code() + ")");
 		}
 
+	}
+
+	private void performIssueTransition(String issueId, Integer transitionId) throws IOException {
+		String url = configCache.getJiraUrl() + "/rest/api/2/issue/" + issueId + "/transitions";
+		String json = "{\"transition\":{\"id\":\"" + transitionId + "\"}}";
+		makeRequest(client, RequestType.POST, url, json);
 	}
 }

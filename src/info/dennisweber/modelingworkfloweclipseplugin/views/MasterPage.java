@@ -1,6 +1,7 @@
 package info.dennisweber.modelingworkfloweclipseplugin.views;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,6 +18,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -28,37 +30,19 @@ import info.dennisweber.modelingworkfloweclipseplugin.model.ConfigCache;
 import info.dennisweber.modelingworkfloweclipseplugin.model.GitInterface;
 import info.dennisweber.modelingworkfloweclipseplugin.model.Issue;
 import info.dennisweber.modelingworkfloweclipseplugin.model.IssueStatus;
+import info.dennisweber.modelingworkfloweclipseplugin.model.PrDto;
 import info.dennisweber.modelingworkfloweclipseplugin.model.WebApi;
 
-public class MasterPage {
-	private WebApi jiraApi;
-	private GitInterface gitInterface;
-	private Shell shell;
-	private Composite parent;
-	private ConfigCache configCache;
-	private MainView mainView;
+public class MasterPage extends SubPage {
 
 	private Group releaseBranchesGroup;
 	private Table issueTable;
 	private Set<Button> issueTableButtons = new HashSet<Button>();
-	private Button issueRefreshButton;
-	private Link issueLink;
-	private Link viewAllIssuesLink;
-
 	private Group issueGroup;
-	private Table releaseBranchesTable;
-	private Button createNewReleaseBranchButton;
-	private Button buildReleaseFromMasterButton;
-
-	private Button configButton;
 
 	public MasterPage(Composite originalParent, WebApi jiraApi, ConfigCache configCache, Shell shell,
 			GitInterface gitInterface, MainView mainView) {
-		this.jiraApi = jiraApi;
-		this.gitInterface = gitInterface;
-		this.shell = shell;
-		this.configCache = configCache;
-		this.mainView = mainView;
+		super(originalParent, jiraApi, configCache, shell, gitInterface, mainView);
 
 		// Layout this Page
 		this.parent = new Composite(originalParent, SWT.NONE);
@@ -69,23 +53,18 @@ public class MasterPage {
 
 		// Issues:
 		issueGroup = initIssueGroup(parent);
-		issueRefreshButton = initIssueRefreshButton(issueGroup);
+		initIssueRefreshButton(issueGroup);
 		issueTable = initIssueTable(issueGroup);
-		issueLink = initCreateIssueLink(issueGroup);
-		viewAllIssuesLink = initViewAllIssuesLink(issueGroup);
+		initCreateIssueLink(issueGroup);
+		initViewAllIssuesLink(issueGroup);
 
 		// Releases:
 		releaseBranchesGroup = initReleaseBranchesGroup(parent);
-		releaseBranchesTable = initReleaseBranchesTable(releaseBranchesGroup);
-		createNewReleaseBranchButton = initCreateNewReleaseBranchButton(releaseBranchesGroup);
-		buildReleaseFromMasterButton = initBuildReleaseFromMasterButton(releaseBranchesGroup);
+		initReleaseBranchesTable(releaseBranchesGroup);
+		initCreateNewReleaseBranchButton(releaseBranchesGroup);
+		initBuildReleaseFromMasterButton(releaseBranchesGroup);
 
-		// Config Button:
-		configButton = initConfigButton(parent);
-	}
-
-	public void dispose() {
-		parent.dispose();
+		initConfigButton(parent);
 	}
 
 	private Group initIssueGroup(Composite parent) {
@@ -110,7 +89,7 @@ public class MasterPage {
 		data.heightHint = 200;
 		issueTable.setLayoutData(data);
 
-		String[] titles = { "ID", "Title", "Status", "Assignee", "Action" };
+		String[] titles = { "ID", "Title", "Status", "Assignee", "Action", "Pull Request" };
 		for (int i = 0; i < titles.length; i++) {
 			TableColumn column = new TableColumn(issueTable, SWT.NONE);
 			column.setText(titles[i]);
@@ -127,7 +106,10 @@ public class MasterPage {
 
 	private void fillTable(Table issueTable) {
 		try {
-			List<Issue> issues = jiraApi.getIssues();
+			List<Issue> issues = webApi.getIssues();
+
+			// Sort the issues
+			Collections.sort(issues, Issue.getStatusThenIdComparator());
 
 			// Draw the update
 			Display.getDefault().syncExec(() -> {
@@ -150,13 +132,11 @@ public class MasterPage {
 					item.setText(3, issue.getAssignee());
 
 					// Action buttons:
+					// "Start working on issue"
 					if (issue.getStatus() == IssueStatus.ToDo) { // Start working on issue:
-						TableEditor editor = new TableEditor(issueTable);
-						Button button = new Button(issueTable, SWT.PUSH);
-						button.setText("Start working on issue");
-						button.addListener(SWT.Selection, event -> {
+						createButton(issueTable, item, "Start Issue", 4, event -> {
 							StartWorkingOnIssueDialog dialog = new StartWorkingOnIssueDialog(shell, issue, gitInterface,
-									jiraApi);
+									webApi);
 							dialog.create();
 							switch (dialog.open()) {// Open dialog and block until it is closed again
 							case Window.OK:
@@ -168,38 +148,61 @@ public class MasterPage {
 								break;
 							}
 						});
-						button.pack();
-						issueTableButtons.add(button);
-						editor.minimumWidth = button.getSize().x;
-						editor.horizontalAlignment = SWT.LEFT;
-						editor.setEditor(button, item, 4);
 					}
+					// "Continue working on issue"
 					if (issue.getStatus() == IssueStatus.InProgress) { // Continue working on issue:
-						TableEditor editor = new TableEditor(issueTable);
-						Button button = new Button(issueTable, SWT.PUSH);
-						button.setText("Continue working on issue");
-						button.addListener(SWT.Selection, event -> {
+						createButton(issueTable, item, "Continue Issue", 4, event -> {
 							gitInterface.fetch();
 							gitInterface.checkout("issue/" + issue.getId());
 							mainView.showWorkingOnIssuePage(issue);
 						});
-						button.pack();
-						issueTableButtons.add(button);
-						editor.minimumWidth = button.getSize().x;
-						editor.horizontalAlignment = SWT.LEFT;
-						editor.setEditor(button, item, 4);
 					}
+					// "View PR"
+					if (issue.getStatus() == IssueStatus.InProgress || issue.getStatus() == IssueStatus.InReview) {
+						try {
+							List<PrDto> PrDtos = webApi.findPr("issue/" + issue.getId());
+							if (!PrDtos.isEmpty()) {
+								createButton(issueTable, item, "View PR", 5, e -> {
+									// Checkout correct Branch
+									gitInterface.checkout("issue/" + issue.getId());
+									// Show PR
+									mainView.showPrPage(issue, PrDtos.get(0));
+								});
+							}
+						} catch (IOException e) {
+							throw new RuntimeException("Failed to find PRs for " + issue.getId());
+						}
+					}
+
 				}
 
 				// Adjust the width of columns
 				for (int i = 0; i < issueTable.getColumnCount(); i++) {
 					issueTable.getColumn(i).pack();
 				}
+				// Manually Re-Adjust the with of the action column
+				issueTable.getColumn(4).setWidth(100);
+
 			});
 		} catch (IOException e) {
 			System.out.println("Failed to update Issues.");
 			e.printStackTrace();
 		}
+	}
+
+	private void createButton(Table issueTable, TableItem item, String text, int colIndex, Listener listener) {
+		Button button = new Button(issueTable, SWT.PUSH);
+		button.setText(text);
+		button.addListener(SWT.Selection, listener);
+		button.pack();
+		issueTableButtons.add(button);
+		TableEditor editor = new TableEditor(issueTable);
+		editor.minimumWidth = button.getSize().x;
+		editor.horizontalAlignment = SWT.LEFT;
+		editor.setEditor(button, item, colIndex);
+		editor.grabHorizontal = true;
+		editor.grabVertical = true;
+		editor.layout();
 	}
 
 	private Button initIssueRefreshButton(Composite parent) {
@@ -262,13 +265,13 @@ public class MasterPage {
 			TableColumn column = new TableColumn(releaseBranchesTable, SWT.NONE);
 			column.setText(titles[i]);
 		}
-		int count = 2;
+		int count = 4;
 		for (int i = 0; i < count; i++) {
 			TableItem item = new TableItem(releaseBranchesTable, SWT.NONE);
-			item.setText(0, Integer.toString(i));
-			item.setText(1, "Xh ago");
-			item.setText(2, "3.1.4");
-			item.setText(3, "This should be a button");
+			item.setText(0, "NOT");
+			item.setText(1, "IMPLEMENTED");
+			item.setText(2, "IN");
+			item.setText(3, "PROTOTYPE");
 		}
 		for (int i = 0; i < titles.length; i++) {
 			releaseBranchesTable.getColumn(i).pack();
@@ -281,7 +284,8 @@ public class MasterPage {
 		Button button = new Button(parent, SWT.PUSH);
 		button.setText("Create new active release branch");
 		button.addListener(SWT.Selection, event -> {
-			MessageDialog.openError(shell, "Feature not in prototype", "This feature is not available in the prototype");
+			MessageDialog.openError(shell, "Feature not in prototype",
+					"This feature is not available in the prototype");
 		});
 
 		return button;
@@ -291,7 +295,8 @@ public class MasterPage {
 		Button button = new Button(parent, SWT.PUSH);
 		button.setText("Build release from master");
 		button.addListener(SWT.Selection, event -> {
-			MessageDialog.openError(shell, "Feature not in prototype", "This feature is not available in the prototype");
+			MessageDialog.openError(shell, "Feature not in prototype",
+					"This feature is not available in the prototype");
 		});
 
 		return button;

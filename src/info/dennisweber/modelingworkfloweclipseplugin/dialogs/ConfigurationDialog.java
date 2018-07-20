@@ -26,12 +26,10 @@ public class ConfigurationDialog extends TitleAreaDialog {
 	private Text usernameTextfield;
 	private Text passwordTextfield;
 	private Button storeConfigButton;
-	private Shell parentShell;
 	private ConfigCache configCache;
 
 	public ConfigurationDialog(Shell parentShell, ConfigCache configCache) {
 		super(parentShell);
-		this.parentShell = parentShell;
 		this.configCache = configCache;
 	}
 
@@ -74,13 +72,13 @@ public class ConfigurationDialog extends TitleAreaDialog {
 				try {
 					configCache.storeConfig();
 				} catch (IOException e) {
-					MessageDialog.openError(parentShell, "Failed to save configuration file", e.getLocalizedMessage());
+					MessageDialog.openError(super.getShell(), "Failed to save configuration file", e.getLocalizedMessage());
 				}
 			}
 			super.okPressed();
 		} else {
 			// Config is not valid
-			MessageDialog.openError(parentShell, "Invalid configuration",
+			MessageDialog.openError(super.getShell(), "Invalid configuration",
 					"This configuration is invalid. Please re-check everything you've entered.");
 		}
 

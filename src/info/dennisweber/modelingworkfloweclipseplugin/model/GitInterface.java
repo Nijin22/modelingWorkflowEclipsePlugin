@@ -14,6 +14,7 @@ import org.eclipse.core.resources.IProject;
 
 public class GitInterface {
 	private IProject eclipseProject;
+	private static final String MERGE_FROM_IDENTIFIER = "Branched of from: ";
 
 	public GitInterface(IProject eclipseProject) {
 		this.eclipseProject = eclipseProject;
@@ -34,16 +35,35 @@ public class GitInterface {
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}
-
 	}
 
 	public void createBranch(String baseBranch, String newBranchName) {
 		try {
-			// Checkout base branch
-			executeGitCommand("checkout " + baseBranch);
+			// Checkout base branch (and update it)
+			checkout(baseBranch);
 
 			// Create (and checkout) the new branch
 			executeGitCommand("checkout -b " + newBranchName);
+
+			// Store the from-Branch as a new (empty) commit.
+			String msg = MERGE_FROM_IDENTIFIER + baseBranch;
+			executeGitCommand("commit --allow-empty -m \"" + msg + "\"");
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public String getBasedOnBranch() {
+		try {
+			List<String> res = executeGitCommand(
+					"log --grep=\"" + MERGE_FROM_IDENTIFIER + "\" --oneline --format=\"%s\" -n 1");
+			if (res.isEmpty()) {
+				// No base branch identified in log.
+				// The current branch might be 'master' or a release-branch?
+				return null;
+			} else {
+				return res.get(0).replace(MERGE_FROM_IDENTIFIER, "");
+			}
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -51,7 +71,61 @@ public class GitInterface {
 
 	public void checkout(String branchName) {
 		try {
-			executeGitCommand("checkout " + branchName);
+			fetch();
+
+			if (doesBranchExist(branchName)) {
+				executeGitCommand("checkout " + branchName);
+			} else {
+				executeGitCommand("checkout -b " + branchName);
+			}
+
+			updateFromRemote(branchName);
+
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Updates the currently checked out branch from remote "origin" (if possible).
+	 * 
+	 * @param thisBranchName
+	 *            the name of the current and remote branch (can be read from
+	 *            getCurrentBranch()).
+	 * 
+	 * @return true, if the branch was updated. False otherwise.
+	 */
+	public boolean updateFromRemote(String thisBranchName) {
+		try {
+			fetch();
+
+			// Check if this reference exists as a remote
+			if (executeGitCommand("show-ref refs/remotes/origin/" + thisBranchName).isEmpty()) {
+				// Remote DOES NOT exist
+				System.out.println("Local branch not updated. No remote branch.");
+				return false;
+			} else {
+				// Remote exists. Make sure update the local branch.
+				// Merge remote
+				executeGitCommand("merge refs/remotes/origin/" + thisBranchName + " --ff-only");
+				System.out.println("Local branch updated.");
+				return true;
+			}
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public boolean doesBranchExist(String branchName) {
+		try {
+			List<String> res = executeGitCommand("show-ref refs/heads/" + branchName);
+			if (res.isEmpty()) {
+				// Nothing found
+				return false;
+			} else {
+				// Content would be the SHA of the branch
+				return true;
+			}
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -74,11 +148,12 @@ public class GitInterface {
 		}
 	}
 
-	public List<CommitDto> getLog() {
+	public List<CommitDto> getLogSinceBranchOff(String compareBranch) {
 		List<CommitDto> commits = new LinkedList<CommitDto>();
 		try {
 			final String separator = "/"; // Separator for git. May not appear in Hash or time.
-			List<String> result = executeGitCommand("log --format=\"%H" + separator + "%ar" + separator + "%s\"");
+			String cmd = "log --format=\"%H" + separator + "%ar" + separator + "%s\" " + compareBranch + "..HEAD";
+			List<String> result = executeGitCommand(cmd);
 			for (String commitLine : result) {
 				String[] splitted = commitLine.split(separator, 3);
 				CommitDto commit = new CommitDto();
@@ -182,6 +257,15 @@ public class GitInterface {
 		}
 	}
 
+	public List<String> getChangedFilesBetweenTwoBranches(String baseBranch, String secondBranch) {
+		try {
+			String cmd = "diff --name-only " + baseBranch + ".." + secondBranch;
+			return executeGitCommand(cmd);
+		} catch (InterruptedException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private List<String> executeGitCommand(String command) throws InterruptedException, IOException {
 		List<String> results = new LinkedList<String>();
 
@@ -191,15 +275,28 @@ public class GitInterface {
 		cmd += command; // The actual command
 
 		System.out.println("[GIT Input:] " + cmd);
+		BufferedReader r;
 		Process p = Runtime.getRuntime().exec(cmd);
-		p.waitFor();
-		BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		int exitCode = p.waitFor(); // Block until command is done.
+
+		if (exitCode != 0) {
+			// Bad exit code.
+			r = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+		} else {
+			r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		}
+
+		// Read output
 		String line;
 		while ((line = r.readLine()) != null) {
-			System.out.println("[GIT Output:] " + line);
+			// System.out.println("[GIT Output:] " + line);
 			results.add(line);
 		}
 
-		return results;
+		if (exitCode != 0) {
+			throw new GitCommandFailedException(exitCode, cmd, results);
+		} else {
+			return results;
+		}
 	}
 }

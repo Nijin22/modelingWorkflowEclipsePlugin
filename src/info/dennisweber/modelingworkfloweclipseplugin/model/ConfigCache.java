@@ -86,7 +86,7 @@ public class ConfigCache {
 	public String getBbRepoPath() {
 		// Set defaults for prototype
 		if (dto.bitbucketRepoPath == null) {
-			dto.bitbucketRepoPath = "/users/denweb01/repos/masterthesis-example-model/";
+			dto.bitbucketRepoPath = "/users/denweb01/repos/masterthesis-example-model";
 		}
 
 		return dto.bitbucketRepoPath;

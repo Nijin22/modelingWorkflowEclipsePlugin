@@ -92,9 +92,9 @@ public class WorkingOnIssuePage extends SubPage {
 		newChangesGroup.setLayout(new GridLayout(1, true));
 		newChangesGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-		// "New changes" label
-		Label newChangesLabel = new Label(newChangesGroup, SWT.NONE);
-		newChangesLabel.setText("New changes:");
+		// "On file system" label
+		Label fsLabel = new Label(newChangesGroup, SWT.NONE);
+		fsLabel.setText("Changes on local file system:");
 
 		// "New changes" table
 		newChangesTable = new Table(newChangesGroup, SWT.BORDER);

@@ -100,16 +100,24 @@ public class GitInterface {
 			fetch();
 
 			// Check if this reference exists as a remote
-			if (executeGitCommand("show-ref refs/remotes/origin/" + thisBranchName).isEmpty()) {
-				// Remote DOES NOT exist
-				System.out.println("Local branch not updated. No remote branch.");
-				return false;
-			} else {
+			boolean hasRemote;
+			try {
+				hasRemote = !executeGitCommand("show-ref refs/remotes/origin/" + thisBranchName).isEmpty();
+			} catch (GitCommandFailedException e) {
+				// The command fails when there is no remote. But this still is a valid result!
+				hasRemote = false;
+			}
+			if (hasRemote) {
 				// Remote exists. Make sure update the local branch.
 				// Merge remote
 				executeGitCommand("merge refs/remotes/origin/" + thisBranchName + " --ff-only");
 				System.out.println("Local branch updated.");
 				return true;
+
+			} else {
+				// Remote DOES NOT exist
+				System.out.println("Local branch not updated. No remote branch.");
+				return false;
 			}
 		} catch (InterruptedException | IOException e) {
 			throw new RuntimeException(e);

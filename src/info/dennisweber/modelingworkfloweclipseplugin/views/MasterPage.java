@@ -218,7 +218,7 @@ public class MasterPage extends SubPage {
 
 	private Link initViewAllIssuesLink(Group issueGroup) {
 		Link viewAllIssuesLink = new Link(issueGroup, SWT.NONE);
-		viewAllIssuesLink.setText("<a>View all issues on Bitbucket</a>");
+		viewAllIssuesLink.setText("<a>View all issues on Jira</a>");
 		viewAllIssuesLink.addListener(SWT.Selection, event -> {
 			// Launch the default browser
 			Program.launch(

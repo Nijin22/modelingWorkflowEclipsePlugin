@@ -130,7 +130,11 @@ public class MasterPage extends SubPage {
 					item.setText(0, issue.getId());
 					item.setText(1, issue.getTitle());
 					item.setText(2, issue.getStatus().toString());
-					item.setText(3, issue.getAssignee());
+					if (issue.getAssignee() == null) {
+						item.setText(3, "[not assigned]");
+					} else {
+						item.setText(3, issue.getAssignee());
+					}
 
 					// Action buttons:
 					// "Start working on issue"
@@ -164,6 +168,20 @@ public class MasterPage extends SubPage {
 							List<PrDto> PrDtos = webApi.findPr("issue/" + issue.getId());
 							if (!PrDtos.isEmpty()) {
 								createButton(issueTable, item, "View PR", 5, e -> {
+									if (issue.getAssignee() == null) {
+										// Issue is unassigned
+										if (MessageDialog.openQuestion(shell, "Assign PR",
+												"This issue is currently unassigned. Would you like assign it to yourself?")) {
+											// User clicked "yes"
+											try {
+												webApi.assignIssueToMe(issue.getId());
+											} catch (IOException e1) {
+												MessageDialog.openError(shell, "Failed to update issue.",
+														e1.getLocalizedMessage());
+											}
+										}
+									}
+
 									// Checkout correct Branch
 									gitInterface.checkout("issue/" + issue.getId());
 									// Show PR
@@ -186,8 +204,7 @@ public class MasterPage extends SubPage {
 
 			});
 		} catch (IOException e) {
-			System.out.println("Failed to update Issues.");
-			e.printStackTrace();
+			MessageDialog.openError(shell, "Failed to update issues.", e.getLocalizedMessage());
 		}
 	}
 

@@ -43,7 +43,7 @@ public class WebApi {
 			// Check bitbucket
 			url = cacheToTest.getBbBaseUrl() + "/rest/api/1.0" + cacheToTest.getBbRepoPath();
 			makeRequest(testClient, RequestType.GET, url, "");
-		}catch (Exception e) {
+		} catch (Exception e) {
 			return "Failed to validate Bitbucket connection. Error: " + e.getLocalizedMessage();
 		}
 
@@ -130,9 +130,15 @@ public class WebApi {
 	public void moveIssueReopen(String issueId) throws IOException {
 		performIssueTransition(issueId, 741); // Transition it via 741 (--> To reopend)
 	}
-	
+
 	public void moveIssueResolved(String issueId) throws IOException {
 		performIssueTransition(issueId, 5); // Transition it via 5 (--> Resolved)
+	}
+
+	public void assignIssueToMe(String issueId) throws IOException {
+		String url = configCache.getJiraUrl() + "/rest/api/2/issue/" + issueId;
+		String data = "{\"fields\":{\"assignee\":{\"name\":\"" + configCache.getUsername() + "\"}}}";
+		makeRequest(client, RequestType.PUT, url, data);
 	}
 
 	public PrDto createPr(String sourceBranch, String targetBranch) throws IOException {
@@ -197,7 +203,7 @@ public class WebApi {
 	}
 
 	private enum RequestType {
-		GET, POST
+		GET, POST, PUT
 	};
 
 	private IssueStatus extractStatus(JsonObject issueJsonObject) {
@@ -240,7 +246,7 @@ public class WebApi {
 		if (assigneeElement != null && !assigneeElement.isJsonNull()) {
 			return assigneeElement.getAsJsonObject().get("displayName").getAsString();
 		} else {
-			return "[Not assigned]";
+			return null;
 		}
 	}
 
@@ -273,17 +279,21 @@ public class WebApi {
 
 	private static String makeRequest(OkHttpClient client, RequestType type, String url, String bodyJson)
 			throws IOException {
+		final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
 		System.out.println("[Requesting] " + url);
 
 		Builder rb = new Request.Builder();
 		rb.url(url);
 		if (type == RequestType.POST) {
-			final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 			RequestBody body = RequestBody.create(JSON, bodyJson);
 			rb.post(body);
+		} else if (type == RequestType.PUT) {
+			RequestBody body = RequestBody.create(JSON, bodyJson);
+			rb.put(body);
 		}
-		Request request = rb.build();
 
+		Request request = rb.build();
 		Response response = client.newCall(request).execute();
 
 		if (response.isSuccessful()) {
@@ -291,7 +301,8 @@ public class WebApi {
 			// System.out.println("[Response (" + response.code() + ")] " + answer);
 			return answer;
 		} else {
-			System.out.println(response.body().string());
+			System.err.println(">> " + url);
+			System.err.println(response.body().string());
 			throw new WebServiceException("Call failed. (" + response.code() + ")");
 		}
 

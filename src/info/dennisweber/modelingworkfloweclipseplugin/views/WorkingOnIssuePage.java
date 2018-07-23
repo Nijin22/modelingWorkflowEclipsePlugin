@@ -7,6 +7,8 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.program.Program;
@@ -90,15 +92,16 @@ public class WorkingOnIssuePage extends SubPage {
 		newChangesGroup.setLayout(new GridLayout(1, true));
 		newChangesGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-		// "New changes" label
-		Label newChangesLabel = new Label(newChangesGroup, SWT.NONE);
-		newChangesLabel.setText("New changes:");
+		// "On file system" label
+		Label fsLabel = new Label(newChangesGroup, SWT.NONE);
+		fsLabel.setText("Changes on local file system:");
 
 		// "New changes" table
 		newChangesTable = new Table(newChangesGroup, SWT.BORDER);
 		newChangesTable.setLinesVisible(true);
 		newChangesTable.setHeaderVisible(true);
 		newChangesTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		newChangesTable.addListener(SWT.Selection, e -> newChangesTable.deselectAll()); // disable selection
 
 		// "Add all to index" button
 		Button addAllToIndexBtn = new Button(newChangesGroup, SWT.NONE);
@@ -117,6 +120,7 @@ public class WorkingOnIssuePage extends SubPage {
 		indexTable.setLinesVisible(true);
 		indexTable.setHeaderVisible(true);
 		indexTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		indexTable.addListener(SWT.Selection, e -> indexTable.deselectAll()); // disable selection
 
 		// "Remove all from index" button
 		Button removeAllFromIndexBtn = new Button(newChangesGroup, SWT.NONE);
@@ -177,6 +181,8 @@ public class WorkingOnIssuePage extends SubPage {
 		logTable.setLinesVisible(true);
 		logTable.setHeaderVisible(true);
 		logTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		logTable.addListener(SWT.Selection, e -> logTable.deselectAll()); // disable selection
+
 		String[] titles = { "Time", "Message", "Action" };
 		for (int i = 0; i < titles.length; i++) {
 			new TableColumn(logTable, SWT.NONE).setText(titles[i]);
@@ -295,7 +301,7 @@ public class WorkingOnIssuePage extends SubPage {
 			// Action Button
 			TableEditor editor = new TableEditor(logTable);
 			Button button = new Button(logTable, SWT.PUSH);
-			button.setText("Revert");
+			button.setText("Reset");
 			button.addListener(SWT.Selection, event -> {
 				boolean confirm = MessageDialog.openConfirm(shell, "Reset changes?",
 						"Are you sure you want to reset all changes made since " + commit.relativeTime + "?\n\n"
@@ -349,5 +355,4 @@ public class WorkingOnIssuePage extends SubPage {
 			commitButton.setEnabled(false);
 		}
 	}
-
 }

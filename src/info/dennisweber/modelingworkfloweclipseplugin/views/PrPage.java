@@ -124,6 +124,7 @@ public class PrPage extends SubPage {
 		changesTable.setLinesVisible(true);
 		changesTable.setHeaderVisible(true);
 		changesTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		changesTable.addListener(SWT.Selection, e -> changesTable.deselectAll()); // disable selection
 		new TableColumn(changesTable, SWT.NONE).setText("Ressource");
 		changesTable.getColumn(0).pack();
 

@@ -84,6 +84,7 @@ public class MasterPage extends SubPage {
 		Table issueTable = new Table(parent, SWT.BORDER);
 		issueTable.setLinesVisible(true);
 		issueTable.setHeaderVisible(true);
+		issueTable.addListener(SWT.Selection, e -> issueTable.deselectAll()); // disable selection
 
 		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		data.heightHint = 200;

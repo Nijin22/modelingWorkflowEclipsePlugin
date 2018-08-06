@@ -62,7 +62,7 @@ public class ConfigCache {
 
 	public String getUsername() {
 		if (dto.username == null) {
-			dto.username = "denweb01";
+			dto.username = "svc.denweb-thesis";
 		}
 		return dto.username;
 	}
@@ -77,7 +77,7 @@ public class ConfigCache {
 	public String getBbBaseUrl() {
 		// Set defaults for prototype
 		if (dto.bitbucketBaseUrl == null) {
-			dto.bitbucketBaseUrl = "https://stash.bfs-intra.net";
+			dto.bitbucketBaseUrl = "https://git.actico.com";
 		}
 
 		return dto.bitbucketBaseUrl;
@@ -86,7 +86,7 @@ public class ConfigCache {
 	public String getBbRepoPath() {
 		// Set defaults for prototype
 		if (dto.bitbucketRepoPath == null) {
-			dto.bitbucketRepoPath = "/users/denweb01/repos/masterthesis-example-model";
+			dto.bitbucketRepoPath = "/projects/DEN/repos/masterthesis-example-project";
 		}
 
 		return dto.bitbucketRepoPath;
@@ -95,7 +95,7 @@ public class ConfigCache {
 	public String getJiraUrl() {
 		// Set defaults for prototype
 		if (dto.jiraUrl == null) {
-			dto.jiraUrl = "https://jira.bfs-intra.net";
+			dto.jiraUrl = "https://issues.actico.com";
 		}
 
 		return dto.jiraUrl;
@@ -104,7 +104,7 @@ public class ConfigCache {
 	public String getJiraBoardId() {
 		// Defaults for prototype
 		if (dto.jiraBoardId == null) {
-			dto.jiraBoardId = "137";
+			dto.jiraBoardId = "13";
 		}
 
 		return dto.jiraBoardId;

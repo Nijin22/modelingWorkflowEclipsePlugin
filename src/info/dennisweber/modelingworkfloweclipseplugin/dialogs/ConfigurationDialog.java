@@ -56,6 +56,8 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		initUsernameInput(container);
 		initPasswordInput(container);
 		initStoreConfigInput(container);
+		new Label(container, SWT.NONE); // Empty label ensure enough space
+										// available for previous elements
 
 		return area;
 	}
@@ -179,6 +181,6 @@ public class ConfigurationDialog extends TitleAreaDialog {
 		storeConfigButton = new Button(container, SWT.CHECK);
 		storeConfigButton
 				.setText("Save configuration file to .git directory. (Passwords will be stored in clear text)");
-		storeConfigButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+		storeConfigButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 	}
 }

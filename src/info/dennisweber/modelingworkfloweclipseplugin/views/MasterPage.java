@@ -204,7 +204,8 @@ public class MasterPage extends SubPage {
 
 			});
 		} catch (IOException e) {
-			MessageDialog.openError(shell, "Failed to update issues.", e.getLocalizedMessage());
+			shell.getDisplay().syncExec(
+					() -> MessageDialog.openError(shell, "Failed to update issues.", e.getLocalizedMessage()));
 		}
 	}
 

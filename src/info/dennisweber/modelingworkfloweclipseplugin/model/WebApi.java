@@ -232,6 +232,7 @@ public class WebApi {
 		case "10001": // Jira calls it "To Be Reviewed"
 		case "10100": // Jira calls it "Test"
 		case "10900": // Jira calls it "In Review"
+		case "10304": // Jira calls it "To Be Reviewed" - Seems to be updated by ACTICO
 			status = IssueStatus.InReview;
 			break;
 
